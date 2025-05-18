@@ -35,8 +35,6 @@ substitutions:
   # for Greek use "Noto Sans" for other languages use a compatible font family
   font_family: Figtree
 
-  micro_wake_word_model: okay_nabu
-
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
@@ -203,7 +201,7 @@ media_player:
 
 micro_wake_word:
   models:
-    - ${micro_wake_word_model}
+    - model: https://github.com/dpw13/wake-word-voice-assistants/raw/main/models/theseus.json
   on_wake_word_detected:
     - voice_assistant.start:
         wake_word: !lambda return wake_word;
