@@ -220,9 +220,7 @@ media_player:
 micro_wake_word:
   id: mww
   models:
-    - okay_nabu
-    - hey_mycroft
-    - hey_jarvis
+    - model: https://github.com/dpw13/wake-word-voice-assistants/raw/main/models/theseus.json
   on_wake_word_detected:
     - voice_assistant.start:
         wake_word: !lambda return wake_word;
