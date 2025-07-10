@@ -49,35 +49,35 @@ substitutions:
   page_header: |-
           it.fill(id(black));
           if(id(api_connection) == true) {
-          it.printf(15, 5, id(icon_font_45), blue, "\U000F07D0");
+            it.printf(15, 5, id(icon_font_45), blue, "\U000F07D0");
           } else {
-                  it.printf(15, 5, id(icon_font_45), red, "\U000F087B");
+            it.printf(15, 5, id(icon_font_45), red, "\U000F087B");
           }
           if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_45), lime, "\U000F16BD");
+            it.printf(80, 5, id(icon_font_45), lime, "\U000F16BD");
           } else {
-                  it.printf(80, 5, id(icon_font_45), red, "\U000F16BC");
+            it.printf(80, 5, id(icon_font_45), red, "\U000F16BC");
           }
           if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_45), red, "\U000F0150");
+            it.printf(135, 5, id(icon_font_45), red, "\U000F0150");
           } else {
-          it.printf(135, 5, id(icon_font_45), lime, "\U000F0150");
+            it.printf(135, 5, id(icon_font_45), lime, "\U000F0150");
           }
           if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_45), red, "\U000F036D");
+            it.printf(190, 5, id(icon_font_45), red, "\U000F036D");
           } else {
-                 it.printf(190, 5, id(icon_font_45), lime, "\U000F036C");
+            it.printf(190, 5, id(icon_font_45), lime, "\U000F036C");
           }
           if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_45), red, "\U000F099E");
+            it.printf(250, 5, id(icon_font_45), red, "\U000F099E");
           } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_45), amber, "\U000F0565");
+            it.printf(250, 5, id(icon_font_45), amber, "\U000F0565");
           } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F068A");
+            it.printf(250, 5, id(icon_font_45), green, "\U000F068A");
           } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F099D");
+            it.printf(250, 5, id(icon_font_45), green, "\U000F099D");
           } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F1828");
+            it.printf(250, 5, id(icon_font_45), green, "\U000F1828");
           }
 
 ############# END OF SUBSTITUTIONS #################
@@ -1529,38 +1529,7 @@ display:
 
       - id: template_page ##### template page ##]##
         lambda: |-
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_45), blue, "\U000F07D0");
-          } else {
-                  it.printf(15, 5, id(icon_font_45), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_45), lime, "\U000F16BD");
-          } else {
-                  it.printf(80, 5, id(icon_font_45), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_45), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_45), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_45), red, "\U000F036D");
-          } else {
-                 it.printf(190, 5, id(icon_font_45), lime, "\U000F036C");
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_45), red, "\U000F099E");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_45), amber, "\U000F0565");
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F099D");
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F1828");
-          }
+          ${page_header}
           it.printf(20, 75, id(icon_font_75), light_blue,"\U000F06E8");
           it.printf(120, 75, id(icon_font_75), light_blue,"\U000F06E8");
           it.printf(220, 75, id(icon_font_75), light_blue, "\U000F06E8");
@@ -1570,38 +1539,7 @@ display:
 
       - id: info_page ##### info page #####
         lambda: |-
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_45), blue, "\U000F07D0");
-          } else {
-                  it.printf(15, 5, id(icon_font_45), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_45), lime, "\U000F16BD");
-          } else {
-                  it.printf(80, 5, id(icon_font_45), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_45), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_45), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_45), red, "\U000F036D");
-          } else {
-                 it.printf(190, 5, id(icon_font_45), lime, "\U000F036C");
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_45), red, "\U000F099E");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_45), amber, "\U000F0565");
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F099D");
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F1828");
-          }
+          ${page_header}
           it.printf(160, 75, id(consola_22), light_blue, TextAlign::CENTER, "IP Address");
           it.printf(160, 95, id(consola_22), yellow, TextAlign::CENTER, "%s", id(ip_addr).state.c_str());
           it.printf(160, 125, id(consola_22), light_blue, TextAlign::CENTER, "Host Name");
@@ -1658,38 +1596,7 @@ display:
 
       - id: climate_page ##### climate page #####
         lambda: |-
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_45), blue, "\U000F07D0");
-          } else {
-                  it.printf(15, 5, id(icon_font_45), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_45), lime, "\U000F16BD");
-          } else {
-                  it.printf(80, 5, id(icon_font_45), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_45), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_45), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_45), red, "\U000F036D");
-          } else {
-                 it.printf(190, 5, id(icon_font_45), lime, "\U000F036C");
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_45), red, "\U000F099E");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_45), amber, "\U000F0565");
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F099D");
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F1828");
-          }
+          ${page_header}
           it.printf(20, 75, id(icon_font_75), light_blue,"\U000F050F");
           it.printf(120, 75, id(icon_font_75), light_blue,"\U000F050F");
           it.printf(220, 75, id(icon_font_75), light_blue, "\U000F050F");
@@ -1699,38 +1606,7 @@ display:
 
       - id: lights_page ##### lights page ####
         lambda: |-
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_45), blue, "\U000F07D0");
-          } else {
-                  it.printf(15, 5, id(icon_font_45), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_45), lime, "\U000F16BD");
-          } else {
-                  it.printf(80, 5, id(icon_font_45), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_45), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_45), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_45), red, "\U000F036D");
-          } else {
-                 it.printf(190, 5, id(icon_font_45), lime, "\U000F036C");
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_45), red, "\U000F099E");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_45), amber, "\U000F0565");
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F099D");
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F1828");
-          }
+          ${page_header}
           it.printf(20, 75, id(icon_font_75), light_blue,"\U000F0335");
           it.printf(120, 75, id(icon_font_75), light_blue,"\U000F0335");
           it.printf(220, 75, id(icon_font_75), light_blue, "\U000F0335");
@@ -1740,38 +1616,7 @@ display:
 
       - id: media_page ##### media player page #####
         lambda: |-
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_45), blue, "\U000F07D0");
-          } else {
-                  it.printf(15, 5, id(icon_font_45), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_45), lime, "\U000F16BD");
-          } else {
-                  it.printf(80, 5, id(icon_font_45), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_45), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_45), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_45), red, "\U000F036D");
-          } else {
-                 it.printf(190, 5, id(icon_font_45), lime, "\U000F036C");
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_45), red, "\U000F099E");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_45), amber, "\U000F0565");
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F099D");
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F1828");
-          }
+          ${page_header}
           if(id(media_state) == true) {
                  it.printf(160, 80, id(consola_22), lime, TextAlign::CENTER, "Playing");
           } else {
@@ -1787,38 +1632,7 @@ display:
           }
       - id: ext_media_page ##### media player page #####
         lambda: |-
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_45), blue, "\U000F07D0");
-          } else {
-                  it.printf(15, 5, id(icon_font_45), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_45), lime, "\U000F16BD");
-          } else {
-                  it.printf(80, 5, id(icon_font_45), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_45), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_45), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_45), red, "\U000F036D");
-          } else {
-                 it.printf(190, 5, id(icon_font_45), lime, "\U000F036C");
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_45), red, "\U000F099E");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_45), amber, "\U000F0565");
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F099D");
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F1828");
-          }
+          ${page_header}
           it.printf(160, 80, id(consola_22), lime, TextAlign::CENTER, id(ha_media_status).state.c_str());
           it.printf(20, 100, id(icon_font_75), blue,"\U000F04AE");
           it.printf(120, 100, id(icon_font_75), blue,"\U000F040E");
@@ -1833,38 +1647,7 @@ display:
 
       - id: scenes_page ##### scenes page #####
         lambda: |-
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_45), blue, "\U000F07D0");
-          } else {
-                  it.printf(15, 5, id(icon_font_45), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_45), lime, "\U000F16BD");
-          } else {
-                  it.printf(80, 5, id(icon_font_45), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_45), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_45), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_45), red, "\U000F036D");
-          } else {
-                 it.printf(190, 5, id(icon_font_45), lime, "\U000F036C");
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_45), red, "\U000F099E");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_45), amber, "\U000F0565");
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F099D");
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F1828");
-          }
+          ${page_header}
           it.printf(20, 75, id(icon_font_75), light_blue,"\U000F0FCE");
           it.printf(120, 75, id(icon_font_75), light_blue,"\U000F0FCE");
           it.printf(220, 75, id(icon_font_75), light_blue, "\U000F0FCE");
@@ -1941,38 +1724,7 @@ display:
           it.printf(160,225, id(consola_22), blue, TextAlign::CENTER, "to enable touch");
       - id: settings_page ##### settings parent page #####
         lambda: |-
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_45), blue, "\U000F07D0");
-          } else {
-                  it.printf(15, 5, id(icon_font_45), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_45), lime, "\U000F16BD");
-          } else {
-                  it.printf(80, 5, id(icon_font_45), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_45), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_45), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_45), red, "\U000F036D");
-          } else {
-                 it.printf(190, 5, id(icon_font_45), lime, "\U000F036C");
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_45), red, "\U000F099E");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_45), amber, "\U000F0565");
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F099D");
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F1828");
-          }
+          ${page_header}
           it.printf(160, 65, id(consola_22), light_blue, TextAlign::CENTER, "settings");
           it.printf(20, 80, id(icon_font_45), light_blue,"\U000F036F");
           it.printf(140, 80, id(icon_font_45), light_blue,"\U000F0502");
@@ -1988,38 +1740,7 @@ display:
 
       - id: device_set_page ##### Device settings page #####
         lambda: |-
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_45), blue, "\U000F07D0");
-          } else {
-                  it.printf(15, 5, id(icon_font_45), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_45), lime, "\U000F16BD");
-          } else {
-                  it.printf(80, 5, id(icon_font_45), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_45), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_45), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_45), red, "\U000F036D");
-          } else {
-                 it.printf(190, 5, id(icon_font_45), lime, "\U000F036C");
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_45), red, "\U000F099E");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_45), amber, "\U000F0565");
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F099D");
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F1828");
-          }
+          ${page_header}
           it.printf(15, 75, id(consola_22), light_blue, "Ext media player");
           if(id(output_audio).state) {
                  it.printf(255, 60, id(icon_font_60), lime, "\U000F0521");
@@ -2066,38 +1787,7 @@ display:
 
       - id: wifi_page ##### wifi info page #####
         lambda: |-
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_45), blue, "\U000F07D0");
-          } else {
-                  it.printf(15, 5, id(icon_font_45), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_45), lime, "\U000F16BD");
-          } else {
-                  it.printf(80, 5, id(icon_font_45), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_45), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_45), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_45), red, "\U000F036D");
-          } else {
-                 it.printf(190, 5, id(icon_font_45), lime, "\U000F036C");
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_45), red, "\U000F099E");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_45), amber, "\U000F0565");
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F099D");
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_45), green, "\U000F1828");
-          }
+          ${page_header}
           it.printf(160, 75, id(consola_22), light_blue, TextAlign::CENTER, "ssid");
           it.printf(160, 95, id(consola_22), yellow, TextAlign::CENTER, "%s", id(connected_ssid).state.c_str());
           it.printf(160, 125, id(consola_22), light_blue, TextAlign::CENTER, "bssid");
