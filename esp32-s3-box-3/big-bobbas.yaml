@@ -22,30 +22,6 @@ substitutions:
   micro_wake_word_model: https://github.com/dpw13/wake-word-voice-assistants/raw/main/models/theseus.json
 ####################################################################
 
-#####  Days and months #####
-## Change the values on the right to match your locale ##
-  monday: Monday
-  tuesday: Tuesday
-  wednesday: Wednesday
-  thursday: Thursday
-  friday: Friday
-  saturday: Saturday
-  sunday: Sunday
-
-  jan: January
-  feb: February
-  mar: March
-  apr: April
-  may: May
-  jun: June
-  jul: July
-  aug: August
-  sept: September
-  oct: October
-  nov: November
-  dec: December
-#####################################################################
-
 ##### DO NOT CHANGE SUBSTITUTIONS BELOW THIS LINE ######
 #####      UNLESS YOU KNOW WHAT YOU ARE DOING     ######
   font_glyphs: '&@!"''%()+=,-_.:°/$€£¥?0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyzÀàÁáÂâÃãÄäĀāĂăÅåǺǻẠạĄąÆæǼǽĆćĈĉČčĊċÇçĎďĐđÐðÈèÉéÊêẼẽĚěËëĒēĔĕĖėẸẹĘęĜĝǦǧĞğĠġĢģĤĥĦħıÌìÍíÎîĨĩÏïĪīĬĭİỊịĮįȷĴĵĶķĸĹĺĽľĻļŁłĿŀŃńÑñŇňŅņƝɲŊŋŉÒòÓóÔôÕõÖöŌōŎŏŐőỌọǪǫØøǾǿŒœŔŕŘřŖŗŚśŜŝŠšŞşȘșẞßŤťŢţȚțŦŧÞþÙùÚúÛûŨũÜüŪūŬŭŮůŰűỤụŲųẀẁẂẃŴŵẄẅỲỳÝýŶŷỸỹŸÿȲȳŹźŽžŻżĲĳƏə'
@@ -76,9 +52,9 @@ substitutions:
           }
 
           if(id(time_display_format).state == "24 Hr") {
-            it.strftime(310, 6, id(consola_28), lt_grey, TextAlign::RIGHT, "%a %l:%M", id(ha_time).now());
+            it.strftime(310, 8, id(consola_28), lt_grey, TextAlign::RIGHT, "%a %H:%M", id(ha_time).now());
           } else {
-            it.strftime(310, 6, id(consola_28), lt_grey, TextAlign::RIGHT, "%a %l:%M%p", id(ha_time).now());
+            it.strftime(310, 8, id(consola_28), lt_grey, TextAlign::RIGHT, "%a %I:%M%p", id(ha_time).now());
           }
 
 ############# END OF SUBSTITUTIONS #################
@@ -1502,12 +1478,10 @@ color:
     hex: 'e74c3c'
   - id: blue
     hex: '3498db'
-  - id: blue_drk
-    hex: '1a5276'
   - id: amber
     hex: 'f7dc6f'
   - id: lime
-    hex: '82e0aa'
+    hex: '5dea70'
   - id: pink
     hex: 'f5b7b1'
   - id: yellow
@@ -1521,7 +1495,9 @@ color:
   - id: lt_blue
     hex: 'a9cce3'
   - id: lt_grey
-    hex: 'eaeded'
+    hex: 'c0c0c0'
+  - id: dk_blue
+    hex: '1a5276'
   - id: bg_blue
     hex: '032341'
   - id: bg_purple
@@ -1664,13 +1640,13 @@ display:
           if(id(s_saver).state) {
                  it.printf(255, 135, id(icon_font_45), lime, "\U000F0521");
           } else {
-                 it.printf(255, 135, id(icon_font_45), blue_drk, "\U000F0A19");
+                 it.printf(255, 135, id(icon_font_45), dk_blue, "\U000F0A19");
           }
           it.printf(250, 205, id(consola_22), lt_blue, TextAlign::RIGHT, "Timeout to blank :");
           if(id(s_saver_mode).state) {
                  it.printf(255, 195, id(icon_font_45), lime, "\U000F0521");
           } else {
-                 it.printf(255, 195, id(icon_font_45), blue_drk, "\U000F0A19");
+                 it.printf(255, 195, id(icon_font_45), dk_blue, "\U000F0A19");
           }
 
       - id: ww_set_page ##### voice settings page #####
@@ -1685,19 +1661,19 @@ display:
           if(id(mute_response_switch).state) {
                  it.printf(255, 135, id(icon_font_45), lime, "\U000F0521");
           } else {
-                 it.printf(255, 135, id(icon_font_45), blue_drk, "\U000F0A19");
+                 it.printf(255, 135, id(icon_font_45), dk_blue, "\U000F0A19");
           }
           it.printf(250, 175, id(consola_22), lt_blue, TextAlign::RIGHT, "Wake up sound :");
           if(id(wake_sound).state) {
                  it.printf(255, 165, id(icon_font_45), lime, "\U000F0521");
           } else {
-                 it.printf(255, 165, id(icon_font_45), blue_drk, "\U000F0A19");
+                 it.printf(255, 165, id(icon_font_45), dk_blue, "\U000F0A19");
           }
           it.printf(250, 205, id(consola_22), lt_blue, TextAlign::RIGHT, "Show Conversation :");
           if(id(display_conversation).state) {
                  it.printf(255, 195, id(icon_font_45), lime, "\U000F0521");
           } else {
-                 it.printf(255, 195, id(icon_font_45), blue_drk, "\U000F0A19");
+                 it.printf(255, 195, id(icon_font_45), dk_blue, "\U000F0A19");
           }
 
       - id: loading_page ### loading page #####
@@ -1749,13 +1725,11 @@ display:
         lambda: |-
           it.fill(id(black));
 
-          const char *days[] {"${sunday}", "${monday}", "${tuesday}", "${wednesday}", "${thursday}", "${friday}", "${saturday}"};
-          const char *months[] {"${jan}", "${feb}", "${mar}", "${apr}", "${may}", "${jun}", "${jul}", "${aug}", "${sept}", "${oct}", "${nov}", "${dec}"};
-          it.printf(160, 28, id(consola_22), lt_blue, TextAlign::CENTER, "%s %d %s", days[id(ha_time).now().day_of_week - 1], id(ha_time).now().day_of_month, months[id(ha_time).now().month - 1]);
+          it.strftime(160, 64, id(consola_28), TextAlign::CENTER, "%A %b %e", id(ha_time).now());
           if(id(time_display_format).state == "24 Hr") {
-            it.strftime(160, 88, id(consola_82), TextAlign::CENTER, "%H:%M", id(ha_time).now());
+            it.strftime(160, 160, id(consola_82), TextAlign::CENTER, "%H:%M", id(ha_time).now());
           } else {
-            it.strftime(160, 88, id(consola_72), TextAlign::CENTER, "%l:%M%p", id(ha_time).now());
+            it.strftime(160, 160, id(consola_82), TextAlign::CENTER, "%I:%M%p", id(ha_time).now());
           }
 
       - id: ota_page ##### firmware uploading page #####
@@ -1789,7 +1763,7 @@ display:
           if(id(output_audio).state) {
                  it.printf(255, 60, id(icon_font_60), lime, "\U000F0521");
           } else {
-                 it.printf(255, 60, id(icon_font_60), blue_drk, "\U000F0A19");
+                 it.printf(255, 60, id(icon_font_60), dk_blue, "\U000F0A19");
           }
           it.printf(5, 190, id(icon_font_45), lt_blue, "\U000F0B28");
           it.printf(15, 135, id(consola_22), lt_blue, "Brightness");
@@ -1863,21 +1837,21 @@ display:
           it.printf(225, 5, id(icon_font_60), green, "\U000F068A");
           it.printf(233, 60, id(consola_18), lt_blue, "Home");
           } else {
-          it.printf(225, 5, id(icon_font_60), blue_drk, "\U000F068A");
+          it.printf(225, 5, id(icon_font_60), dk_blue, "\U000F068A");
           it.printf(233, 60, id(consola_18), lt_blue, "Home");
           }
           if(id(alarm_status).state == "armed_away") {
           it.printf(225, 80, id(icon_font_60), green, "\U000F099D");
           it.printf(233, 135, id(consola_18), lt_blue, "Away");
           } else {
-          it.printf(225, 80, id(icon_font_60), blue_drk, "\U000F099D");
+          it.printf(225, 80, id(icon_font_60), dk_blue, "\U000F099D");
           it.printf(233, 135, id(consola_18), lt_blue, "Away");
           }
           if(id(alarm_status).state == "armed_night") {
           it.printf(225, 155, id(icon_font_60), green, "\U000F1828");
           it.printf(228, 215, id(consola_18), lt_blue, "Night");
           } else {
-          it.printf(225, 155, id(icon_font_60), blue_drk, "\U000F1828");
+          it.printf(225, 155, id(icon_font_60), dk_blue, "\U000F1828");
           it.printf(228, 215, id(consola_18), lt_blue, "Night");
           }
       - id: alarm_home_activate_page ##### alarm  home activation page #####
@@ -1906,7 +1880,7 @@ display:
           it.filled_rectangle(198, 110, 108, 50, green);
           it.print(255, 135, id(consola_28), white, TextAlign::CENTER, "Disarm");
           }
-          it.filled_rectangle(198, 170, 108, 50, blue_drk);
+          it.filled_rectangle(198, 170, 108, 50, dk_blue);
           it.print(255, 195, id(consola_28), white, TextAlign::CENTER, "Clear");
           if(id(alarm_status).state == "disarmed") {
           it.printf(255, 30, id(icon_font_45), red, TextAlign::CENTER, "\U000F068A");
@@ -1943,7 +1917,7 @@ display:
           it.filled_rectangle(198, 110, 108, 50, green);
           it.print(255, 135, id(consola_28), white, TextAlign::CENTER, "Disarm");
           }
-          it.filled_rectangle(198, 170, 108, 50, blue_drk);
+          it.filled_rectangle(198, 170, 108, 50, dk_blue);
           it.print(255, 195, id(consola_28), white, TextAlign::CENTER, "Clear");
           if(id(alarm_status).state == "disarmed") {
           it.printf(255, 30, id(icon_font_45), red, TextAlign::CENTER, "\U000F099D");
@@ -1980,7 +1954,7 @@ display:
           it.filled_rectangle(198, 110, 108, 50, green);
           it.print(255, 135, id(consola_28), white, TextAlign::CENTER, "Disarm");
           }
-          it.filled_rectangle(198, 170, 108, 50, blue_drk);
+          it.filled_rectangle(198, 170, 108, 50, dk_blue);
           it.print(255, 195, id(consola_28), white, TextAlign::CENTER, "Clear");
           if(id(alarm_status).state == "disarmed") {
           it.printf(255, 30, id(icon_font_45), red, TextAlign::CENTER, "\U000F1828");
