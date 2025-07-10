@@ -207,18 +207,17 @@ select:
       - On device
     initial_option: In Home Assistant
     on_value:
+      - micro_wake_word.stop
+      - voice_assistant.stop
+      - delay: 100ms
+      - script.execute: start_voice_assistant
       - if:
           condition:
             lambda: return x == "In Home Assistant";
           then:
-            - micro_wake_word.stop
-            - delay: 500ms
-            - lambda: id(va).set_use_wake_word(true);
-            - voice_assistant.start_continuous:
             - text_sensor.template.publish:
                 id: wakeword_location
                 state: !lambda 'return "Home Assistant";'
-            - component.update: s3_box_lcd
       - if:
           condition:
             lambda: return x == "On device";
@@ -226,11 +225,7 @@ select:
             - text_sensor.template.publish:
                 id: wakeword_location
                 state: !lambda 'return "On Device";'
-            - lambda: id(va).set_use_wake_word(false);
-            - voice_assistant.stop
-            - delay: 500ms
-            - micro_wake_word.start
-            - component.update: s3_box_lcd
+      - component.update: s3_box_lcd
 
   - platform: template
     entity_category: config
@@ -258,23 +253,34 @@ select:
         - component.update: s3_box_lcd
 
 script:
+  # To avoid having stream voice assistance and on-device wake word detection active simultaneously,
+  # ALL access to starting/stopping the voice assistant should be made through this script. DO NOT
+  # explicitly start or stop micro_wake_word OR voice_assistant.
+  # Exception: the voice assistant itself needs to hand off between MWW and itself, so it does
+  # call start/stop.
   - id: start_voice_assistant
     then:
       - if:
           condition:
-            switch.is_off: mute_switch
+            and:
+              - switch.is_off: mute_switch
+              - lambda: return id(global_is_assisting) == false;
+              - not:
+                - voice_assistant.is_running
           then:
             - if:
                 condition:
                   lambda: return id(wake_word_engine_location).state == "In Home Assistant";
                 then:
                   - lambda: id(va).set_use_wake_word(true);
+                  - delay: 200ms
                   - voice_assistant.start_continuous:
             - if:
                 condition:
                   lambda: return id(wake_word_engine_location).state == "On device";
                 then:
                   - lambda: id(va).set_use_wake_word(false);
+                  - delay: 200ms
                   - micro_wake_word.start
 
   - id: stop_voice_assistant
@@ -597,29 +603,12 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
     entity_category: config
     on_turn_on:
-      then:
-        - voice_assistant.stop
-        - micro_wake_word.stop
+      - script.execute: stop_voice_assistant
+      - component.update: s3_box_lcd
+      - component.update: s3_box_lcd
     on_turn_off:
-      - if:
-          condition:
-            not:
-              - voice_assistant.is_running
-          then:
-            - if:
-                condition:
-                  lambda: return id(wake_word_engine_location).state == "In Home Assistant";
-                then:
-                  - lambda: id(va).set_use_wake_word(true);
-                  - delay: 50ms
-                  - voice_assistant.start_continuous
-            - if:
-                condition:
-                  lambda: return id(wake_word_engine_location).state == "On device";
-                then:
-                  - lambda: id(va).set_use_wake_word(false);
-                  - micro_wake_word.start
-            - component.update: s3_box_lcd
+      - script.execute: start_voice_assistant
+      - component.update: s3_box_lcd
 
   - platform: template
     id: media_mute
@@ -667,15 +656,7 @@ switch:
       # Stop playing the alarm
       - media_player.stop:
           announcement: true
-      - if:
-          condition:
-            lambda: return id(wake_word_engine_location).state == "On device";
-          then:
-            - lambda: id(va).set_use_wake_word(false);
-            - micro_wake_word.start
-          else:
-            - lambda: id(va).set_use_wake_word(true);
-            - voice_assistant.start
+      - script.execute: start_voice_assistant
     on_turn_on:
       - lambda: id(va).set_use_wake_word(false);
       - voice_assistant.stop:
@@ -939,22 +920,25 @@ speaker:
     bits_per_sample: 16bit
     channel: left
     audio_dac: es8311_dac
-    buffer_duration: 500ms  # Increased for stability without timeout @youkorr
+    buffer_duration: 100ms
   # Virtual speakers to combine the announcement and media streams together into one output
   - id: mixing_speaker
     platform: mixer
     output_speaker: i2s_audio_speaker
+    task_stack_in_psram: true
     source_speakers:
       - id: announcement_mixing_input
       - id: media_mixing_input
-  # Vritual speakers to resample each pipelines' audio, if necessary, as the mixer speaker requires the same sample rate
+  # Virtual speakers to resample each pipelines' audio, if necessary, as the mixer speaker requires the same sample rate
   - platform: resampler
     id: announcement_resampling_speaker
     output_speaker: announcement_mixing_input
+    task_stack_in_psram: true
     sample_rate: 48000  # Added explicit sample rate
   - platform: resampler
     id: media_resampling_speaker
     output_speaker: media_mixing_input
+    task_stack_in_psram: true
     sample_rate: 48000  # Added explicit sample rate
 
 media_player:
@@ -986,29 +970,14 @@ media_player:
             condition:
               media_player.is_playing:
             then:
-              - micro_wake_word.stop
-              - voice_assistant.stop
+              - script.execute: stop_voice_assistant
         - if:
             condition:
-              and:
-                - lambda: return id(global_is_assisting) == false;
-                - or:
-                    - media_player.is_idle
-                    - media_player.is_paused
+              or:
+                - media_player.is_idle
+                - media_player.is_paused
             then:
-              - if:
-                  condition:
-                    and:
-                      - switch.is_off: mute_switch
-                      - lambda: return id(wake_word_engine_location).state == "On device";
-                  then:
-                    - micro_wake_word.start
-                  else:
-                    - if:
-                        condition:
-                          - switch.is_off: mute_switch
-                        then:
-                          - voice_assistant.start
+              - script.execute: start_voice_assistant
         - if:
             condition:
               and:
@@ -1021,7 +990,7 @@ media_player:
               - mixer_speaker.apply_ducking:
                   id: media_mixing_input
                   decibel_reduction: 0
-                  duration: 1.0s
+                  duration: 0.0s
     on_play:
       - wait_until:
           - lambda: return id(global_is_assisting) == false;
@@ -1174,7 +1143,7 @@ voice_assistant:
                 media_content_id: !lambda 'return x;'
                 media_content_type: music
                 announce: "false"
-    - delay: 5s
+    - delay: 3s
     - display.page.show: idle_page
     - component.update: s3_box_lcd
 
@@ -1206,7 +1175,7 @@ voice_assistant:
     - mixer_speaker.apply_ducking:
         id: media_mixing_input
         decibel_reduction: 0
-        duration: 1.0s
+        duration: 0.0s
     - lambda: id(global_is_assisting) = false;
     - if:
         condition:
@@ -1239,20 +1208,7 @@ voice_assistant:
           - switch.turn_off: ext_media_mute
 
   on_client_connected:
-    - if:
-        condition:
-          and:
-            - switch.is_off: mute_switch
-            - lambda: return id(wake_word_engine_location).state == "On device";
-        then:
-          - micro_wake_word.start
-        else:
-          - if:
-              condition:
-                - switch.is_off: mute_switch
-              then:
-                - lambda: id(va).set_use_wake_word(true);
-                - voice_assistant.start
+    - script.execute: start_voice_assistant
   on_timer_started:
     - script.execute: timer_ending
     - component.update: s3_box_lcd
@@ -2281,6 +2237,7 @@ binary_sensor:
       then:
         - switch.turn_on: mute_switch
         - lambda: id(va).set_use_wake_word(false);
+        - micro_wake_word.stop
         - delay: 100ms
         - voice_assistant.start
         - wait_until:
@@ -2289,6 +2246,12 @@ binary_sensor:
         - voice_assistant.stop
     on_release:
       then:
+        # TODO: if the voice test button is only pressed quickly instead of held down,
+        # the mute will be turned off and micro_wake_word will be restarted. This appears
+        # to cause ring buffer corruption because MWW and VA *both* have the microphone,
+        # then VA tears down the mic once it detects an end to voice. This appears to cause
+        # a problem in the i2c_audio component when VA attempts to play the response and
+        # the ring buffer appears to get corrupted.
         - switch.turn_off: mute_switch
         - component.update: s3_box_lcd
 
