@@ -12,6 +12,18 @@ substitutions:
   climate_device_1: living_room
   climate_device_2: bedroom
 
+  # status bar is 0-40, main screen is 40-240
+  # Equal spacing from 40 to 240 in 2 rows is 90, 190 (at row center)
+  row_1: "90"
+  row_2: "190"
+
+  # 3 columns 0-320
+  col_1: "53"
+  col_2: "160"
+  col_3: "267"
+
+  center_x: "160"
+
   tts_voice_speed: "16000" #options #nabu casa "24000" #piper "16000" elevenlabs "44100" must include quotes
 
 #################### ON DEVICE WAKE WORDS #######################################
@@ -790,9 +802,9 @@ text_sensor:
     platform: template
     on_value:
       lambda: |-
-        if(id(text_request).state.length()>32) {
+        if(id(text_request).state.length()>40) {
           std::string name = id(text_request).state.c_str();
-          std::string truncated = esphome::str_truncate(name.c_str(),31);
+          std::string truncated = esphome::str_truncate(name.c_str(),39);
           id(text_request).state = (truncated+"...").c_str();
         }
 
@@ -800,9 +812,9 @@ text_sensor:
     platform: template
     on_value:
       lambda: |-
-        if(id(text_response).state.length()>32) {
+        if(id(text_response).state.length()>40) {
           std::string name = id(text_response).state.c_str();
-          std::string truncated = esphome::str_truncate(name.c_str(),31);
+          std::string truncated = esphome::str_truncate(name.c_str(),39);
           id(text_response).state = (truncated+"...").c_str();
         }
   - platform: wifi_info
@@ -1277,29 +1289,20 @@ voice_assistant:
               - component.update: s3_box_lcd
 
 image:
-  - file: "https://github.com/BigBobbas/ESP32-S3-Box3-Custom-ESPHome/raw/main/images/error.png"
+  - file: "https://github.com/dpw13/wake-word-voice-assistants/raw/main/images/error.png"
     id: error_img
-    resize: 320x240
     type: RGB
     transparency: alpha_channel
-  - file: "https://github.com/BigBobbas/ESP32-S3-Box3-Custom-ESPHome/raw/main/images/idle.png"
-    id: idle_img
-    resize: 320x240
-    type: RGB
-    transparency: alpha_channel
-  - file: "https://github.com/BigBobbas/ESP32-S3-Box3-Custom-ESPHome/raw/main/images/listening.png"
+  - file: "https://github.com/dpw13/wake-word-voice-assistants/raw/main/images/listening.png"
     id: listening_img
-    resize: 320x240
     type: RGB
     transparency: alpha_channel
-  - file: "https://github.com/BigBobbas/ESP32-S3-Box3-Custom-ESPHome/raw/main/images/thinking.png"
+  - file: "https://github.com/dpw13/wake-word-voice-assistants/raw/main/images/thinking.png"
     id: thinking_img
-    resize: 320x240
     type: RGB
     transparency: alpha_channel
-  - file: "https://github.com/BigBobbas/ESP32-S3-Box3-Custom-ESPHome/raw/main/images/replying.png"
+  - file: "https://github.com/dpw13/wake-word-voice-assistants/raw/main/images/replying.png"
     id: replying_img
-    resize: 320x240
     type: RGB
     transparency: alpha_channel
   - file: "https://github.com/BigBobbas/ESP32-S3-Box3-Custom-ESPHome/raw/main/images/loading.png"
@@ -1539,95 +1542,98 @@ display:
     ##################################################################################################
     pages:
       - id: idle_page ##### home page ######
+        # status bar is 0-40, main screen is 40-240
+        # Equal spacing from 40 to 240 in 2 rows is 106.7, 173.3 (at row center)
+        # Icon size 75 so y start of 69.2 and 135.8
         lambda: |-
           ${page_header}
-          it.printf(20, 75, id(icon_font_75), blue, "\U000F050F");
-          it.printf(120, 75, id(icon_font_75), yellow, "\U000F06E8");
-          it.printf(220, 75, id(icon_font_75), purple, "\U000F0210");
-          it.printf(20, 155, id(icon_font_75), red, "\U000F075A");
-          it.printf(120, 155, id(icon_font_75), blue, "\U000F0FCE");
-          it.printf(220, 155, id(icon_font_75), lime, "\U000F08D6");
+          it.printf(${col_1}, ${row_1}, id(icon_font_75), blue, TextAlign::CENTER, "\U000F050F");
+          it.printf(${col_2}, ${row_1}, id(icon_font_75), yellow, TextAlign::CENTER, "\U000F06E8");
+          it.printf(${col_3}, ${row_1}, id(icon_font_75), purple, TextAlign::CENTER, "\U000F0210");
+          it.printf(${col_1}, ${row_2}, id(icon_font_75), red, TextAlign::CENTER, "\U000F075A");
+          it.printf(${col_2}, ${row_2}, id(icon_font_75), blue, TextAlign::CENTER, "\U000F0FCE");
+          it.printf(${col_3}, ${row_2}, id(icon_font_75), lime, TextAlign::CENTER, "\U000F08D6");
 
       - id: template_page ##### template page #####
         lambda: |-
           ${page_header}
-          it.printf(20, 75, id(icon_font_75), lt_blue, "\U000F06E8");
-          it.printf(120, 75, id(icon_font_75), lt_blue, "\U000F06E8");
-          it.printf(220, 75, id(icon_font_75), lt_blue, "\U000F06E8");
-          it.printf(20, 155, id(icon_font_75), lt_blue, "\U000F06E8");
-          it.printf(120, 155, id(icon_font_75), lt_blue, "\U000F06E8");
-          it.printf(220, 155, id(icon_font_75), lt_blue, "\U000F06E8");
+          it.printf(${col_1}, ${row_1}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F06E8");
+          it.printf(${col_2}, ${row_1}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F06E8");
+          it.printf(${col_3}, ${row_1}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F06E8");
+          it.printf(${col_1}, ${row_2}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F06E8");
+          it.printf(${col_2}, ${row_2}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F06E8");
+          it.printf(${col_3}, ${row_2}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F06E8");
 
       - id: info_page ##### info page #####
         lambda: |-
           ${page_header}
-          it.printf(160, 75, id(consola_22), lt_blue, TextAlign::CENTER, "IP Address");
-          it.printf(160, 95, id(consola_22), yellow, TextAlign::CENTER, "%s", id(ip_addr).state.c_str());
-          it.printf(160, 125, id(consola_22), lt_blue, TextAlign::CENTER, "Host Name");
-          it.printf(160, 145, id(consola_22), yellow, TextAlign::CENTER, "${name}.local");
-          it.printf(160, 175, id(consola_22), lt_blue, TextAlign::CENTER, "Device Uptime DDD:H:M:S");
-          it.printf(160, 195, id(consola_22), yellow, TextAlign::CENTER, "%s", id(up_sens_text).state.c_str());
+          it.printf(${center_x}, 75, id(consola_22), lt_blue, TextAlign::CENTER, "IP Address");
+          it.printf(${center_x}, 95, id(consola_22), yellow, TextAlign::CENTER, "%s", id(ip_addr).state.c_str());
+          it.printf(${center_x}, 125, id(consola_22), lt_blue, TextAlign::CENTER, "Host Name");
+          it.printf(${center_x}, 145, id(consola_22), yellow, TextAlign::CENTER, "${name}.local");
+          it.printf(${center_x}, 175, id(consola_22), lt_blue, TextAlign::CENTER, "Device Uptime DDD:H:M:S");
+          it.printf(${center_x}, 195, id(consola_22), yellow, TextAlign::CENTER, "%s", id(up_sens_text).state.c_str());
 
       - id: climate_page ##### climate page #####
         lambda: |-
           ${page_header}
-          it.printf(20, 75, id(icon_font_60), blue, "\U000F0B28");
-          it.printf(160, 115, id(consola_50), lt_blue, TextAlign::CENTER, "%.0f/%.0f", id(climate_cur_temp_1).state, id(climate_tgt_temp_1).state);
-          it.printf(240, 75, id(icon_font_60), red, "\U000F0B2A");
-          it.printf(20, 155, id(icon_font_60), blue, "\U000F0B28");
-          it.printf(160, 195, id(consola_50), lt_blue, TextAlign::CENTER, "%.0f/%.0f", id(climate_cur_temp_2).state, id(climate_tgt_temp_2).state);
-          it.printf(240, 155, id(icon_font_60), red, "\U000F0B2A");
+          it.printf(40, ${row_1}, id(icon_font_60), blue, TextAlign::CENTER, "\U000F0B28");
+          it.printf(${center_x}, ${row_1} + 10, id(consola_50), lt_blue, TextAlign::CENTER, "%.0f/%.0f", id(climate_cur_temp_1).state, id(climate_tgt_temp_1).state);
+          it.printf(280, ${row_1}, id(icon_font_60), red, TextAlign::CENTER, "\U000F0B2A");
+          it.printf(40, ${row_2}, id(icon_font_60), blue, TextAlign::CENTER, "\U000F0B28");
+          it.printf(${center_x}, ${row_2} + 10, id(consola_50), lt_blue, TextAlign::CENTER, "%.0f/%.0f", id(climate_cur_temp_2).state, id(climate_tgt_temp_2).state);
+          it.printf(280, ${row_2}, id(icon_font_60), red, TextAlign::CENTER, "\U000F0B2A");
 
       - id: lights_page ##### lights page ####
         lambda: |-
           ${page_header}
-          it.printf(20, 75, id(icon_font_75), lt_blue, "\U000F0335");
-          it.printf(120, 75, id(icon_font_75), lt_blue, "\U000F0335");
-          it.printf(220, 75, id(icon_font_75), lt_blue, "\U000F0335");
-          it.printf(20, 155, id(icon_font_75), lt_blue, "\U000F0335");
-          it.printf(120, 155, id(icon_font_75), lt_blue, "\U000F0335");
-          it.printf(220, 155, id(icon_font_75), lt_blue, "\U000F0335");
+          it.printf(${col_1}, ${row_1}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0335");
+          it.printf(${col_2}, ${row_1}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0335");
+          it.printf(${col_3}, ${row_1}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0335");
+          it.printf(${col_1}, ${row_2}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0335");
+          it.printf(${col_2}, ${row_2}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0335");
+          it.printf(${col_3}, ${row_2}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0335");
 
       - id: media_page ##### media player page #####
         lambda: |-
           ${page_header}
           if(id(media_state) == true) {
-                 it.printf(160, 80, id(consola_22), lime, TextAlign::CENTER, "Playing");
+                 it.printf(160, 60, id(consola_22), lime, TextAlign::CENTER, "Playing");
           } else {
-                 it.printf(160, 80, id(consola_22), lt_blue, TextAlign::CENTER, "Nothing Playing");
+                 it.printf(160, 60, id(consola_22), lt_blue, TextAlign::CENTER, "Nothing Playing");
           }
-          it.printf(20, 100, id(icon_font_75), blue, "\U000F075E");
-          it.printf(120, 100, id(icon_font_75), blue, "\U000F040E");
-          it.printf(220, 100, id(icon_font_75), blue, "\U000F075D");
+          it.printf(${col_1}, 130, id(icon_font_75), blue, TextAlign::CENTER, "\U000F075E");
+          it.printf(${col_2}, 130, id(icon_font_75), blue, TextAlign::CENTER, "\U000F040E");
+          it.printf(${col_3}, 130, id(icon_font_75), blue, TextAlign::CENTER, "\U000F075D");
           if(id(media_mute).state) {
-                  it.printf(120, 165, id(icon_font_75), red, "\U000F0581");
+                  it.printf(${center_x}, 200, id(icon_font_75), red, TextAlign::CENTER, "\U000F0581");
           } else {
-                  it.printf(120, 165, id(icon_font_75), lime, "\U000F057E");
+                  it.printf(${center_x}, 200, id(icon_font_75), lime, TextAlign::CENTER, "\U000F057E");
           }
       - id: ext_media_page ##### media player page #####
         lambda: |-
           ${page_header}
-          it.printf(160, 80, id(consola_22), lime, TextAlign::CENTER, id(ha_media_status).state.c_str());
-          it.printf(20, 100, id(icon_font_75), blue, "\U000F04AE");
-          it.printf(120, 100, id(icon_font_75), blue, "\U000F040E");
-          it.printf(220, 100, id(icon_font_75), blue, "\U000F04AD");
+          it.printf(${center_x}, 60, id(consola_22), lime, TextAlign::CENTER, id(ha_media_status).state.c_str());
+          it.printf(${col_1}, 130, id(icon_font_75), blue, TextAlign::CENTER, "\U000F04AE");
+          it.printf(${col_2}, 130, id(icon_font_75), blue, TextAlign::CENTER, "\U000F040E");
+          it.printf(${col_3}, 130, id(icon_font_75), blue, TextAlign::CENTER, "\U000F04AD");
           if(id(ext_media_mute).state) {
-                  it.printf(120, 165, id(icon_font_75), red, "\U000F0581");
+                  it.printf(${col_2}, 200, id(icon_font_75), red, TextAlign::CENTER, "\U000F0581");
           } else {
-                  it.printf(120, 165, id(icon_font_75), lime, "\U000F057E");
+                  it.printf(${col_2}, 200, id(icon_font_75), lime, TextAlign::CENTER, "\U000F057E");
           }
-          it.printf(20, 165, id(icon_font_75), blue, "\U000F075E");
-          it.printf(220, 165, id(icon_font_75), blue, "\U000F075D");
+          it.printf(${col_1}, 200, id(icon_font_75), blue, TextAlign::CENTER, "\U000F075E");
+          it.printf(${col_3}, 200, id(icon_font_75), blue, TextAlign::CENTER, "\U000F075D");
 
       - id: scenes_page ##### scenes page #####
         lambda: |-
           ${page_header}
-          it.printf(20, 75, id(icon_font_75), lt_blue, "\U000F0FCE");
-          it.printf(120, 75, id(icon_font_75), lt_blue, "\U000F0FCE");
-          it.printf(220, 75, id(icon_font_75), lt_blue, "\U000F0FCE");
-          it.printf(20, 155, id(icon_font_75), lt_blue, "\U000F0FCE");
-          it.printf(120, 155, id(icon_font_75), lt_blue, "\U000F0FCE");
-          it.printf(220, 155, id(icon_font_75), lt_blue, "\U000F0FCE");
+          it.printf(${col_1}, ${row_1}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0FCE");
+          it.printf(${col_2}, ${row_1}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0FCE");
+          it.printf(${col_3}, ${row_1}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0FCE");
+          it.printf(${col_1}, ${row_2}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0FCE");
+          it.printf(${col_2}, ${row_2}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0FCE");
+          it.printf(${col_3}, ${row_2}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0FCE");
 
       - id: ss_set_page ##### screen saver settings page #####
         lambda: |-
@@ -1683,31 +1689,31 @@ display:
 
       - id: listening_page
         lambda: |-
-          it.fill(Color::BLACK);
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(listening_img), ImageAlign::CENTER);
+          ${page_header}
+          it.image((it.get_width() / 2), 140, id(listening_img), ImageAlign::CENTER);
 
       - id: thinking_page
         lambda: |-
-          it.fill(Color::BLACK);
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(thinking_img), ImageAlign::CENTER);
+          ${page_header}
+          it.image((it.get_width() / 2), 140, id(thinking_img), ImageAlign::CENTER);
           if (id(display_conversation).state) {
-            it.filled_rectangle(0, 0, 320, 30, Color::WHITE);
-            it.printf(10, 10, id(consola_16), Color::BLACK, "%s", id(text_request).state.c_str());
+            it.filled_rectangle(0, 40, 320, 30, bg_charcoal);
+            it.printf(10, 45, id(consola_16), lt_grey, "%s", id(text_request).state.c_str());
           }
       - id: replying_page
         lambda: |-
-          it.fill(Color::BLACK);
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(replying_img), ImageAlign::CENTER);
+          ${page_header}
+          it.image((it.get_width() / 2), 140, id(replying_img), ImageAlign::CENTER);
           if (id(display_conversation).state) {
-            it.filled_rectangle(0, 0, 320, 30, Color::WHITE);
-            it.filled_rectangle(0, 210, 320, 30, Color::WHITE);
-            it.printf(10, 10, id(consola_16), Color::BLACK, "%s", id(text_request).state.c_str());
-            it.printf(10, 220, id(consola_16), Color::BLACK, "%s", id(text_response).state.c_str());
+            it.filled_rectangle(0, 40, 320, 30, bg_charcoal);
+            it.filled_rectangle(0, 210, 320, 30, bg_charcoal);
+            it.printf(10, 45, id(consola_16), lt_grey, "%s", id(text_request).state.c_str());
+            it.printf(10, 215, id(consola_16), lt_grey, "%s", id(text_response).state.c_str());
           }
       - id: error_page
         lambda: |-
-          it.fill(Color::BLACK);
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(error_img), ImageAlign::CENTER);
+          ${page_header}
+          it.image((it.get_width() / 2), 140, id(error_img), ImageAlign::CENTER);
 
       - id: timer_finished_page
         lambda: |-
@@ -2014,13 +2020,13 @@ i2c:
     scl_pullup_enabled: true
     frequency: 100kHz
 
-  - sda: GPIO41
+  - id: bus_b
+    sda: GPIO41
     scl: GPIO40
     scan: true
     sda_pullup_enabled: true
     scl_pullup_enabled: true
     frequency: 50kHz
-    id: bus_b
 
 
 touchscreen:
