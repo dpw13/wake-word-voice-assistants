@@ -53,37 +53,32 @@ substitutions:
   page_header: |-
           it.fill(id(black));
           if(id(api_connection) == true) {
-            it.printf(15, 5, id(icon_font_45), blue, "\U000F07D0");
+            it.printf(10, 5, id(icon_font_30), blue, "\U000F07D0");
           } else {
-            it.printf(15, 5, id(icon_font_45), red, "\U000F087B");
+            it.printf(10, 5, id(icon_font_30), red, "\U000F087B");
           }
           if(id(wifi_connection) == true) {
-            it.printf(70, 5, id(icon_font_45), blue, "\U000F16BD");
+            it.printf(50, 5, id(icon_font_30), blue, "\U000F16BD");
           } else {
-            it.printf(70, 5, id(icon_font_45), red, "\U000F16BC");
+            it.printf(50, 5, id(icon_font_30), red, "\U000F16BC");
           }
           if(id(time_remaining_0).state == "-:--:--"){
-            it.printf(125, 5, id(icon_font_45), blue, "\U000F0150");
+            it.printf(90, 5, id(icon_font_30), blue, "\U000F0150");
           } else if(id(time_remaining_0).state == "0:00:00"){
-            it.printf(125, 5, id(icon_font_45), red, "\U000F0150");
+            it.printf(90, 5, id(icon_font_30), red, "\U000F0150");
           } else {
-            it.printf(125, 5, id(icon_font_45), lime, "\U000F0150");
+            it.printf(90, 5, id(icon_font_30), lime, "\U000F0150");
           }
           if(id(mute_switch).state) {
-            it.printf(180, 5, id(icon_font_45), red, "\U000F036D");
+            it.printf(130, 5, id(icon_font_30), red, "\U000F036D");
           } else {
-            it.printf(180, 5, id(icon_font_45), blue, "\U000F036C");
+            it.printf(130, 5, id(icon_font_30), blue, "\U000F036C");
           }
-          if(id(alarm_status).state == "disarmed") {
-            it.printf(250, 5, id(icon_font_45), red, "\U000F099E");
-          } else if(id(alarm_status).state == "arming") {
-            it.printf(250, 5, id(icon_font_45), amber, "\U000F0565");
-          } else if(id(alarm_status).state == "armed_home") {
-            it.printf(250, 5, id(icon_font_45), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-            it.printf(250, 5, id(icon_font_45), green, "\U000F099D");
-          } else if(id(alarm_status).state == "armed_night") {
-            it.printf(250, 5, id(icon_font_45), green, "\U000F1828");
+
+          if(id(time_display_format).state == "24 Hr") {
+            it.strftime(310, 6, id(consola_28), lt_grey, TextAlign::RIGHT, "%a %l:%M", id(ha_time).now());
+          } else {
+            it.strftime(310, 6, id(consola_28), lt_grey, TextAlign::RIGHT, "%a %l:%M%p", id(ha_time).now());
           }
 
 ############# END OF SUBSTITUTIONS #################
@@ -1395,8 +1390,8 @@ font:
       '${font_glyphs}'
 
   - file: "https://github.com/BigBobbas/ESP32-S3-Box3-Custom-ESPHome/raw/main/fonts/materialdesignicons-webfont.ttf"
-    id: icon_font_45
-    size: 45
+    id: icon_font_30
+    size: 30
     glyphs: &icon_glyphs
       - "\U000F0079"#battery 100%
       - "\U000F007A"#battery 10%
@@ -1484,7 +1479,6 @@ font:
     size: 180
     glyphs: *icon_glyphs
 
-
   - file: "https://github.com/BigBobbas/ESP32-S3-Box3-Custom-ESPHome/raw/main/fonts/materialdesignicons-webfont.ttf"
     id: icon_font_75
     size: 75
@@ -1495,31 +1489,39 @@ font:
     size: 60
     glyphs: *icon_glyphs
 
+  - file: "https://github.com/BigBobbas/ESP32-S3-Box3-Custom-ESPHome/raw/main/fonts/materialdesignicons-webfont.ttf"
+    id: icon_font_45
+    size: 45
+    glyphs: *icon_glyphs
+
+# Color codes from https://htmlcolorcodes.com/
 color:
   - id: green
-    hex: '75D15F'
+    hex: '2ecc71'
   - id: red
-    hex: 'FF3131'
+    hex: 'e74c3c'
   - id: blue
-    hex: '47B7E9'
+    hex: '3498db'
   - id: blue_drk
-    hex: '085296'
+    hex: '1a5276'
   - id: amber
-    hex: 'FBAB35'
+    hex: 'f7dc6f'
   - id: lime
-    hex: '20FC30'
+    hex: '82e0aa'
   - id: pink
-    hex: 'D92BBC'
+    hex: 'f5b7b1'
   - id: yellow
-    hex: 'FFC000'
+    hex: 'f7d73f'
   - id: black
     hex: '000000'
   - id: white
     hex: 'ffffff'
   - id: purple
-    hex: '73264D'
-  - id: light_blue
-    hex: 'CFE2F3'
+    hex: '8e44ad'
+  - id: lt_blue
+    hex: 'a9cce3'
+  - id: lt_grey
+    hex: 'eaeded'
   - id: bg_blue
     hex: '032341'
   - id: bg_purple
@@ -1573,42 +1575,42 @@ display:
       - id: template_page ##### template page #####
         lambda: |-
           ${page_header}
-          it.printf(20, 75, id(icon_font_75), light_blue, "\U000F06E8");
-          it.printf(120, 75, id(icon_font_75), light_blue, "\U000F06E8");
-          it.printf(220, 75, id(icon_font_75), light_blue, "\U000F06E8");
-          it.printf(20, 155, id(icon_font_75), light_blue, "\U000F06E8");
-          it.printf(120, 155, id(icon_font_75), light_blue, "\U000F06E8");
-          it.printf(220, 155, id(icon_font_75), light_blue, "\U000F06E8");
+          it.printf(20, 75, id(icon_font_75), lt_blue, "\U000F06E8");
+          it.printf(120, 75, id(icon_font_75), lt_blue, "\U000F06E8");
+          it.printf(220, 75, id(icon_font_75), lt_blue, "\U000F06E8");
+          it.printf(20, 155, id(icon_font_75), lt_blue, "\U000F06E8");
+          it.printf(120, 155, id(icon_font_75), lt_blue, "\U000F06E8");
+          it.printf(220, 155, id(icon_font_75), lt_blue, "\U000F06E8");
 
       - id: info_page ##### info page #####
         lambda: |-
           ${page_header}
-          it.printf(160, 75, id(consola_22), light_blue, TextAlign::CENTER, "IP Address");
+          it.printf(160, 75, id(consola_22), lt_blue, TextAlign::CENTER, "IP Address");
           it.printf(160, 95, id(consola_22), yellow, TextAlign::CENTER, "%s", id(ip_addr).state.c_str());
-          it.printf(160, 125, id(consola_22), light_blue, TextAlign::CENTER, "Host Name");
+          it.printf(160, 125, id(consola_22), lt_blue, TextAlign::CENTER, "Host Name");
           it.printf(160, 145, id(consola_22), yellow, TextAlign::CENTER, "${name}.local");
-          it.printf(160, 175, id(consola_22), light_blue, TextAlign::CENTER, "Device Uptime DDD:H:M:S");
+          it.printf(160, 175, id(consola_22), lt_blue, TextAlign::CENTER, "Device Uptime DDD:H:M:S");
           it.printf(160, 195, id(consola_22), yellow, TextAlign::CENTER, "%s", id(up_sens_text).state.c_str());
 
       - id: climate_page ##### climate page #####
         lambda: |-
           ${page_header}
           it.printf(20, 75, id(icon_font_60), blue, "\U000F0B28");
-          it.printf(160, 115, id(consola_50), light_blue, TextAlign::CENTER, "%.0f/%.0f", id(climate_cur_temp_1).state, id(climate_tgt_temp_1).state);
+          it.printf(160, 115, id(consola_50), lt_blue, TextAlign::CENTER, "%.0f/%.0f", id(climate_cur_temp_1).state, id(climate_tgt_temp_1).state);
           it.printf(240, 75, id(icon_font_60), red, "\U000F0B2A");
           it.printf(20, 155, id(icon_font_60), blue, "\U000F0B28");
-          it.printf(160, 195, id(consola_50), light_blue, TextAlign::CENTER, "%.0f/%.0f", id(climate_cur_temp_2).state, id(climate_tgt_temp_2).state);
+          it.printf(160, 195, id(consola_50), lt_blue, TextAlign::CENTER, "%.0f/%.0f", id(climate_cur_temp_2).state, id(climate_tgt_temp_2).state);
           it.printf(240, 155, id(icon_font_60), red, "\U000F0B2A");
 
       - id: lights_page ##### lights page ####
         lambda: |-
           ${page_header}
-          it.printf(20, 75, id(icon_font_75), light_blue, "\U000F0335");
-          it.printf(120, 75, id(icon_font_75), light_blue, "\U000F0335");
-          it.printf(220, 75, id(icon_font_75), light_blue, "\U000F0335");
-          it.printf(20, 155, id(icon_font_75), light_blue, "\U000F0335");
-          it.printf(120, 155, id(icon_font_75), light_blue, "\U000F0335");
-          it.printf(220, 155, id(icon_font_75), light_blue, "\U000F0335");
+          it.printf(20, 75, id(icon_font_75), lt_blue, "\U000F0335");
+          it.printf(120, 75, id(icon_font_75), lt_blue, "\U000F0335");
+          it.printf(220, 75, id(icon_font_75), lt_blue, "\U000F0335");
+          it.printf(20, 155, id(icon_font_75), lt_blue, "\U000F0335");
+          it.printf(120, 155, id(icon_font_75), lt_blue, "\U000F0335");
+          it.printf(220, 155, id(icon_font_75), lt_blue, "\U000F0335");
 
       - id: media_page ##### media player page #####
         lambda: |-
@@ -1616,7 +1618,7 @@ display:
           if(id(media_state) == true) {
                  it.printf(160, 80, id(consola_22), lime, TextAlign::CENTER, "Playing");
           } else {
-                 it.printf(160, 80, id(consola_22), light_blue, TextAlign::CENTER, "Nothing Playing");
+                 it.printf(160, 80, id(consola_22), lt_blue, TextAlign::CENTER, "Nothing Playing");
           }
           it.printf(20, 100, id(icon_font_75), blue, "\U000F075E");
           it.printf(120, 100, id(icon_font_75), blue, "\U000F040E");
@@ -1644,27 +1646,27 @@ display:
       - id: scenes_page ##### scenes page #####
         lambda: |-
           ${page_header}
-          it.printf(20, 75, id(icon_font_75), light_blue, "\U000F0FCE");
-          it.printf(120, 75, id(icon_font_75), light_blue, "\U000F0FCE");
-          it.printf(220, 75, id(icon_font_75), light_blue, "\U000F0FCE");
-          it.printf(20, 155, id(icon_font_75), light_blue, "\U000F0FCE");
-          it.printf(120, 155, id(icon_font_75), light_blue, "\U000F0FCE");
-          it.printf(220, 155, id(icon_font_75), light_blue, "\U000F0FCE");
+          it.printf(20, 75, id(icon_font_75), lt_blue, "\U000F0FCE");
+          it.printf(120, 75, id(icon_font_75), lt_blue, "\U000F0FCE");
+          it.printf(220, 75, id(icon_font_75), lt_blue, "\U000F0FCE");
+          it.printf(20, 155, id(icon_font_75), lt_blue, "\U000F0FCE");
+          it.printf(120, 155, id(icon_font_75), lt_blue, "\U000F0FCE");
+          it.printf(220, 155, id(icon_font_75), lt_blue, "\U000F0FCE");
 
       - id: ss_set_page ##### screen saver settings page #####
         lambda: |-
           it.fill(id(black));
-          it.printf(160, 70, id(icon_font_75), light_blue, TextAlign::CENTER, "\U000F08D6");
-          it.printf(160, 20, id(consola_22), light_blue, TextAlign::CENTER, "Screensaver Settings");
-          it.printf(250, 115, id(consola_22), light_blue, TextAlign::RIGHT, "Timeout Settings :");
+          it.printf(160, 70, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F08D6");
+          it.printf(160, 20, id(consola_22), lt_blue, TextAlign::CENTER, "Screensaver Settings");
+          it.printf(250, 115, id(consola_22), lt_blue, TextAlign::RIGHT, "Timeout Settings :");
           it.printf(255, 95, id(icon_font_45), lime, "\U000F08D6");
-          it.printf(250, 145, id(consola_22), light_blue, TextAlign::RIGHT, "Enable screensaver :");
+          it.printf(250, 145, id(consola_22), lt_blue, TextAlign::RIGHT, "Enable screensaver :");
           if(id(s_saver).state) {
                  it.printf(255, 135, id(icon_font_45), lime, "\U000F0521");
           } else {
                  it.printf(255, 135, id(icon_font_45), blue_drk, "\U000F0A19");
           }
-          it.printf(250, 205, id(consola_22), light_blue, TextAlign::RIGHT, "Timeout to blank :");
+          it.printf(250, 205, id(consola_22), lt_blue, TextAlign::RIGHT, "Timeout to blank :");
           if(id(s_saver_mode).state) {
                  it.printf(255, 195, id(icon_font_45), lime, "\U000F0521");
           } else {
@@ -1674,24 +1676,24 @@ display:
       - id: ww_set_page ##### voice settings page #####
         lambda: |-
           it.fill(id(black));
-          it.printf(160, 50, id(icon_font_45), light_blue, TextAlign::CENTER, "\U000F08D6");
-          it.printf(160, 20, id(consola_22), light_blue, TextAlign::CENTER, "Voice Settings");
-          it.printf(155, 85, id(consola_22), light_blue, TextAlign::CENTER, "tap to change");
-          it.printf(135, 115, id(consola_22), light_blue, TextAlign::RIGHT, "WakeWord :");
+          it.printf(160, 50, id(icon_font_45), lt_blue, TextAlign::CENTER, "\U000F08D6");
+          it.printf(160, 20, id(consola_22), lt_blue, TextAlign::CENTER, "Voice Settings");
+          it.printf(155, 85, id(consola_22), lt_blue, TextAlign::CENTER, "tap to change");
+          it.printf(135, 115, id(consola_22), lt_blue, TextAlign::RIGHT, "WakeWord :");
           it.printf(310, 115, id(consola_22), lime, TextAlign::RIGHT, "%s", id(wakeword_location).state.c_str());
-          it.printf(250, 145, id(consola_22), light_blue, TextAlign::RIGHT, "Mute responses :");
+          it.printf(250, 145, id(consola_22), lt_blue, TextAlign::RIGHT, "Mute responses :");
           if(id(mute_response_switch).state) {
                  it.printf(255, 135, id(icon_font_45), lime, "\U000F0521");
           } else {
                  it.printf(255, 135, id(icon_font_45), blue_drk, "\U000F0A19");
           }
-          it.printf(250, 175, id(consola_22), light_blue, TextAlign::RIGHT, "Wake up sound :");
+          it.printf(250, 175, id(consola_22), lt_blue, TextAlign::RIGHT, "Wake up sound :");
           if(id(wake_sound).state) {
                  it.printf(255, 165, id(icon_font_45), lime, "\U000F0521");
           } else {
                  it.printf(255, 165, id(icon_font_45), blue_drk, "\U000F0A19");
           }
-          it.printf(250, 205, id(consola_22), light_blue, TextAlign::RIGHT, "Show Conversation :");
+          it.printf(250, 205, id(consola_22), lt_blue, TextAlign::RIGHT, "Show Conversation :");
           if(id(display_conversation).state) {
                  it.printf(255, 195, id(icon_font_45), lime, "\U000F0521");
           } else {
@@ -1734,9 +1736,9 @@ display:
       - id: timer_finished_page
         lambda: |-
           it.fill(id(black));
-          it.printf(160, 20, id(consola_22), light_blue, TextAlign::CENTER, "Timer Finished");
-          it.printf(160, 120, id(icon_font_180), light_blue, TextAlign::CENTER, "\U000F009E");
-          it.printf(160, 215, id(consola_22), light_blue, TextAlign::CENTER, "tap screen to dismiss");
+          it.printf(160, 20, id(consola_22), lt_blue, TextAlign::CENTER, "Timer Finished");
+          it.printf(160, 120, id(icon_font_180), lt_blue, TextAlign::CENTER, "\U000F009E");
+          it.printf(160, 215, id(consola_22), lt_blue, TextAlign::CENTER, "tap screen to dismiss");
 
       - id: muted_page
         lambda: |-
@@ -1749,7 +1751,7 @@ display:
 
           const char *days[] {"${sunday}", "${monday}", "${tuesday}", "${wednesday}", "${thursday}", "${friday}", "${saturday}"};
           const char *months[] {"${jan}", "${feb}", "${mar}", "${apr}", "${may}", "${jun}", "${jul}", "${aug}", "${sept}", "${oct}", "${nov}", "${dec}"};
-          it.printf(160, 28, id(consola_22), light_blue, TextAlign::CENTER, "%s %d %s", days[id(ha_time).now().day_of_week - 1], id(ha_time).now().day_of_month, months[id(ha_time).now().month - 1]);
+          it.printf(160, 28, id(consola_22), lt_blue, TextAlign::CENTER, "%s %d %s", days[id(ha_time).now().day_of_week - 1], id(ha_time).now().day_of_month, months[id(ha_time).now().month - 1]);
           if(id(time_display_format).state == "24 Hr") {
             it.strftime(160, 88, id(consola_82), TextAlign::CENTER, "%H:%M", id(ha_time).now());
           } else {
@@ -1767,76 +1769,76 @@ display:
       - id: settings_page ##### settings parent page #####
         lambda: |-
           ${page_header}
-          it.printf(160, 65, id(consola_22), light_blue, TextAlign::CENTER, "settings");
-          it.printf(20, 80, id(icon_font_45), light_blue, "\U000F036F");
-          it.printf(140, 80, id(icon_font_45), light_blue, "\U000F0502");
-          it.printf(255, 80, id(icon_font_45), light_blue, "\U000F1C6F");
-          it.printf(15, 210, id(consola_22), light_blue, "Device");
-          it.printf(245, 130, id(consola_22), light_blue, "Info");
-          it.printf(20, 160, id(icon_font_45), light_blue, "\U000F08D6");
-          it.printf(255, 160, id(icon_font_45), light_blue, "\U000F05CB");
-          it.printf(15, 130, id(consola_22), light_blue, "Voice");
-          it.printf(135, 130, id(consola_22), light_blue, "Saver");
-          it.printf(245, 210, id(consola_22), light_blue, "Test");
+          it.printf(160, 65, id(consola_22), lt_blue, TextAlign::CENTER, "settings");
+          it.printf(20, 80, id(icon_font_45), lt_blue, "\U000F036F");
+          it.printf(140, 80, id(icon_font_45), lt_blue, "\U000F0502");
+          it.printf(255, 80, id(icon_font_45), lt_blue, "\U000F1C6F");
+          it.printf(15, 210, id(consola_22), lt_blue, "Device");
+          it.printf(245, 130, id(consola_22), lt_blue, "Info");
+          it.printf(20, 160, id(icon_font_45), lt_blue, "\U000F08D6");
+          it.printf(255, 160, id(icon_font_45), lt_blue, "\U000F05CB");
+          it.printf(15, 130, id(consola_22), lt_blue, "Voice");
+          it.printf(135, 130, id(consola_22), lt_blue, "Saver");
+          it.printf(245, 210, id(consola_22), lt_blue, "Test");
           it.image((it.get_width() / 2), 195, id(logo_img), ImageAlign::CENTER);
 
       - id: device_set_page ##### Device settings page #####
         lambda: |-
           ${page_header}
-          it.printf(15, 75, id(consola_22), light_blue, "Ext media player");
+          it.printf(15, 75, id(consola_22), lt_blue, "Ext media player");
           if(id(output_audio).state) {
                  it.printf(255, 60, id(icon_font_60), lime, "\U000F0521");
           } else {
                  it.printf(255, 60, id(icon_font_60), blue_drk, "\U000F0A19");
           }
-          it.printf(5, 190, id(icon_font_45), light_blue, "\U000F0B28");
-          it.printf(15, 135, id(consola_22), light_blue, "Brightness");
-          it.printf(238, 148, id(consola_22), light_blue, TextAlign::CENTER, "%.f", id(s_default_brightness).state);
+          it.printf(5, 190, id(icon_font_45), lt_blue, "\U000F0B28");
+          it.printf(15, 135, id(consola_22), lt_blue, "Brightness");
+          it.printf(238, 148, id(consola_22), lt_blue, TextAlign::CENTER, "%.f", id(s_default_brightness).state);
           it.printf(160, 125, id(icon_font_45), lime, TextAlign::LEFT, "\U000F0B2C");
           it.printf(315, 125, id(icon_font_45), lime, TextAlign::RIGHT, "\U000F0B26");
-          it.rectangle(215, 125, 46, 40, light_blue);
-          it.printf(65, 180, id(consola_22), light_blue, "Time Format:");
+          it.rectangle(215, 125, 46, 40, lt_blue);
+          it.printf(65, 180, id(consola_22), lt_blue, "Time Format:");
           it.printf(210, 180, id(consola_22), lime, "%s", id(time_display_format).state.c_str());
 
       - id: timeout_settings_page ##### Timeout Settings page #####
         lambda: |-
           it.fill(id(black));
-          //it.printf(160, 50, id(icon_font_45), light_blue, TextAlign::CENTER, "\U000F0150");
-          it.printf(160, 20, id(consola_22), light_blue, TextAlign::CENTER, "Screen Settings");
-          it.printf(160, 60, id(consola_22), light_blue, TextAlign::CENTER, "Screen Saver");
-          it.printf(50, 80, id(consola_14), light_blue, "Delay secs");
-          it.printf(185, 80, id(consola_14), light_blue, "Dim Brightness");
+          //it.printf(160, 50, id(icon_font_45), lt_blue, TextAlign::CENTER, "\U000F0150");
+          it.printf(160, 20, id(consola_22), lt_blue, TextAlign::CENTER, "Screen Settings");
+          it.printf(160, 60, id(consola_22), lt_blue, TextAlign::CENTER, "Screen Saver");
+          it.printf(50, 80, id(consola_14), lt_blue, "Delay secs");
+          it.printf(185, 80, id(consola_14), lt_blue, "Dim Brightness");
           it.printf(105, 100, id(icon_font_45), lime, TextAlign::LEFT, "\U000F0B2C");
           it.printf(65, 100, id(icon_font_45), lime, TextAlign::RIGHT, "\U000F0B26");
           it.rectangle(65, 105, 40, 40, lime);
-          it.printf(85, 125, id(consola_22), light_blue, TextAlign::CENTER, "%.f", id(s_saver_delay).state);
-          it.printf(20, 160, id(consola_14), light_blue, "Screen off delay");
+          it.printf(85, 125, id(consola_22), lt_blue, TextAlign::CENTER, "%.f", id(s_saver_delay).state);
+          it.printf(20, 160, id(consola_14), lt_blue, "Screen off delay");
           it.printf(105, 180, id(icon_font_45), lime, TextAlign::LEFT, "\U000F0B2C");
           it.printf(65, 180, id(icon_font_45), lime, TextAlign::RIGHT, "\U000F0B26");
           it.rectangle(65, 180, 40, 40, lime);
-          it.printf(85, 200, id(consola_22), light_blue, TextAlign::CENTER, "%.f", id(s_saver_blank_delay).state);
+          it.printf(85, 200, id(consola_22), lt_blue, TextAlign::CENTER, "%.f", id(s_saver_blank_delay).state);
           it.printf(255, 100, id(icon_font_45), pink, TextAlign::LEFT, "\U000F0B2C");
           it.printf(215, 100, id(icon_font_45), pink, TextAlign::RIGHT, "\U000F0B26");
           it.rectangle(215, 105, 40, 40, pink);
-          it.printf(235, 125, id(consola_22), light_blue, TextAlign::CENTER, "%.f", id(s_saver_brightness).state);
+          it.printf(235, 125, id(consola_22), lt_blue, TextAlign::CENTER, "%.f", id(s_saver_brightness).state);
 
       - id: time_remaining_page ##### timer countdown page #####
         lambda: |-
           it.fill(id(black));
-          it.printf(160, 20, id(consola_22), light_blue, TextAlign::CENTER, "Active Timers");
-          it.printf(160, 70, id(icon_font_75), light_blue, TextAlign::CENTER, "\U000F0150");
-          it.printf(160, 155, id(consola_50), light_blue, TextAlign::CENTER, "%s", id(time_remaining_0).state.c_str());
+          it.printf(160, 20, id(consola_22), lt_blue, TextAlign::CENTER, "Active Timers");
+          it.printf(160, 70, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0150");
+          it.printf(160, 155, id(consola_50), lt_blue, TextAlign::CENTER, "%s", id(time_remaining_0).state.c_str());
 
       - id: wifi_page ##### wifi info page #####
         lambda: |-
           ${page_header}
-          it.printf(160, 75, id(consola_22), light_blue, TextAlign::CENTER, "ssid");
+          it.printf(160, 75, id(consola_22), lt_blue, TextAlign::CENTER, "ssid");
           it.printf(160, 95, id(consola_22), yellow, TextAlign::CENTER, "%s", id(connected_ssid).state.c_str());
-          it.printf(160, 125, id(consola_22), light_blue, TextAlign::CENTER, "bssid");
+          it.printf(160, 125, id(consola_22), lt_blue, TextAlign::CENTER, "bssid");
           it.printf(160, 145, id(consola_22), yellow, TextAlign::CENTER, "%s", id(connected_bssid).state.c_str());
-          it.printf(160, 175, id(consola_22), light_blue, TextAlign::CENTER, "Device MAC");
+          it.printf(160, 175, id(consola_22), lt_blue, TextAlign::CENTER, "Device MAC");
           it.printf(160, 195, id(consola_22), yellow, TextAlign::CENTER, "%s", id(device_mac).state.c_str());
-          it.printf(38, 210, id(consola_22), light_blue, TextAlign::LEFT, "Signal Strength");
+          it.printf(38, 210, id(consola_22), lt_blue, TextAlign::LEFT, "Signal Strength");
           it.printf(283, 210, id(consola_22), yellow, TextAlign::RIGHT, "%4.f%%", id(wifi_percent).state);
 
       - id: alarm_page   #### alarm page #####
@@ -1859,24 +1861,24 @@ display:
           }
           if(id(alarm_status).state == "armed_home") {
           it.printf(225, 5, id(icon_font_60), green, "\U000F068A");
-          it.printf(233, 60, id(consola_18), light_blue, "Home");
+          it.printf(233, 60, id(consola_18), lt_blue, "Home");
           } else {
           it.printf(225, 5, id(icon_font_60), blue_drk, "\U000F068A");
-          it.printf(233, 60, id(consola_18), light_blue, "Home");
+          it.printf(233, 60, id(consola_18), lt_blue, "Home");
           }
           if(id(alarm_status).state == "armed_away") {
           it.printf(225, 80, id(icon_font_60), green, "\U000F099D");
-          it.printf(233, 135, id(consola_18), light_blue, "Away");
+          it.printf(233, 135, id(consola_18), lt_blue, "Away");
           } else {
           it.printf(225, 80, id(icon_font_60), blue_drk, "\U000F099D");
-          it.printf(233, 135, id(consola_18), light_blue, "Away");
+          it.printf(233, 135, id(consola_18), lt_blue, "Away");
           }
           if(id(alarm_status).state == "armed_night") {
           it.printf(225, 155, id(icon_font_60), green, "\U000F1828");
-          it.printf(228, 215, id(consola_18), light_blue, "Night");
+          it.printf(228, 215, id(consola_18), lt_blue, "Night");
           } else {
           it.printf(225, 155, id(icon_font_60), blue_drk, "\U000F1828");
-          it.printf(228, 215, id(consola_18), light_blue, "Night");
+          it.printf(228, 215, id(consola_18), lt_blue, "Night");
           }
       - id: alarm_home_activate_page ##### alarm  home activation page #####
         lambda: |-
@@ -1888,13 +1890,13 @@ display:
           int number = i * 3 + j + 1;
           int x_position = 15 + j * 56;  // Ajustement de la position en X
           int y_position = 15 + i * 56;  // Ajustement de la position en Y
-          it.rectangle(x_position, y_position, 48, 48, light_blue);  // Taille du rectangle ajustée
+          it.rectangle(x_position, y_position, 48, 48, lt_blue);  // Taille du rectangle ajustée
           char num_str[2];
           snprintf(num_str, sizeof(num_str), "%d", number);
           it.print(x_position + 24, y_position + 24, id(consola_28), TextAlign::CENTER, num_str);  // Centrage du chiffre
           }
            }
-          it.rectangle(71, 183, 48, 48, light_blue);  // Position et taille du rectangle ajustées
+          it.rectangle(71, 183, 48, 48, lt_blue);  // Position et taille du rectangle ajustées
           it.print(95, 207, id(consola_28), TextAlign::CENTER, "0");  // Centrage du chiffre "0"
           //it.filled_rectangle(198, 110, 108, 50, green);
           if(id(alarm_status).state == "disarmed"){
@@ -1926,13 +1928,13 @@ display:
           int number = i * 3 + j + 1;
           int x_position = 15 + j * 56;  // Ajustement de la position en X
           int y_position = 15 + i * 56;  // Ajustement de la position en Y
-          it.rectangle(x_position, y_position, 48, 48, light_blue);  // Taille du rectangle ajustée
+          it.rectangle(x_position, y_position, 48, 48, lt_blue);  // Taille du rectangle ajustée
           char num_str[2];
           snprintf(num_str, sizeof(num_str), "%d", number);
           it.print(x_position + 24, y_position + 24, id(consola_28), TextAlign::CENTER, num_str);  // Centrage du chiffre
           }
            }
-          it.rectangle(71, 183, 48, 48, light_blue);  // Position et taille du rectangle ajustées
+          it.rectangle(71, 183, 48, 48, lt_blue);  // Position et taille du rectangle ajustées
           it.print(95, 207, id(consola_28), TextAlign::CENTER, "0");  // Centrage du chiffre "0"
           if(id(alarm_status).state == "disarmed"){
           it.filled_rectangle(198, 110, 108, 50, red);
@@ -1963,13 +1965,13 @@ display:
           int number = i * 3 + j + 1;
           int x_position = 15 + j * 56;  // Ajustement de la position en X
           int y_position = 15 + i * 56;  // Ajustement de la position en Y
-          it.rectangle(x_position, y_position, 48, 48, light_blue);  // Taille du rectangle ajustée
+          it.rectangle(x_position, y_position, 48, 48, lt_blue);  // Taille du rectangle ajustée
           char num_str[2];
           snprintf(num_str, sizeof(num_str), "%d", number);
           it.print(x_position + 24, y_position + 24, id(consola_28), TextAlign::CENTER, num_str);  // Centrage du chiffre
           }
            }
-          it.rectangle(71, 183, 48, 48, light_blue);  // Position et taille du rectangle ajustées
+          it.rectangle(71, 183, 48, 48, lt_blue);  // Position et taille du rectangle ajustées
           it.print(95, 207, id(consola_28), TextAlign::CENTER, "0");  // Centrage du chiffre "0"
           if(id(alarm_status).state == "disarmed"){
           it.filled_rectangle(198, 110, 108, 50, red);
@@ -2115,9 +2117,9 @@ binary_sensor:
       - settings_page
     id: status_bar_1
     x_min: 5
-    x_max: 60
+    x_max: 45
     y_min: 0
-    y_max: 55
+    y_max: 40
           #### make sure that the following 4 lines are uncommented by removing the prefixed '#' ###
     # on_click:
       # min_length: 10ms
@@ -2138,10 +2140,10 @@ binary_sensor:
       - settings_page
     id: status_bar_2
     internal: true
-    x_min: 65
-    x_max: 125
+    x_min: 45
+    x_max: 85
     y_min: 0
-    y_max: 55
+    y_max: 40
     on_click:
       min_length: 10ms
       max_length: 500ms
@@ -2162,10 +2164,10 @@ binary_sensor:
       - settings_page
     id: status_bar_3
     internal: true
-    x_min: 130
-    x_max: 185
+    x_min: 85
+    x_max: 125
     y_min: 0
-    y_max: 55
+    y_max: 40
     on_click:
       min_length: 10ms
       max_length: 500ms
@@ -2192,10 +2194,10 @@ binary_sensor:
       - settings_page
     id: status_bar_4
     internal: true
-    x_min: 190
-    x_max: 245
+    x_min: 125
+    x_max: 165
     y_min: 0
-    y_max: 55
+    y_max: 40
     on_click:
       min_length: 10ms
       max_length: 500ms
@@ -2215,16 +2217,16 @@ binary_sensor:
       - settings_page
     name: status_bar_5
     internal: true
-    x_min: 250
-    x_max: 305
+    x_min: 165
+    x_max: 205
     y_min: 0
-    y_max: 55
-    on_click:
-      min_length: 10ms
-      max_length: 500ms
-      then:
-        - display.page.show: alarm_page
-        - component.update: s3_box_lcd
+    y_max: 40
+    #on_click:
+    #  min_length: 10ms
+    #  max_length: 500ms
+    #  then:
+    #    - display.page.show: alarm_page
+    #    - component.update: s3_box_lcd
 
 ##### settings page ####
   - platform: touchscreen
