@@ -8,6 +8,10 @@ substitutions:
 
   external_media_player: chromecast_remote  ##change this to your external media player enity_id: do not include media_player.
   home_assistant_host: http://potato6300.localdomain:8123 ##change to the full url or IP of your HA server including port
+
+  climate_device_1: living_room
+  climate_device_2: bedroom
+
   tts_voice_speed: "16000" #options #nabu casa "24000" #piper "16000" elevenlabs "44100" must include quotes
 
 #################### ON DEVICE WAKE WORDS #######################################
@@ -54,19 +58,21 @@ substitutions:
             it.printf(15, 5, id(icon_font_45), red, "\U000F087B");
           }
           if(id(wifi_connection) == true) {
-            it.printf(80, 5, id(icon_font_45), lime, "\U000F16BD");
+            it.printf(70, 5, id(icon_font_45), blue, "\U000F16BD");
           } else {
-            it.printf(80, 5, id(icon_font_45), red, "\U000F16BC");
+            it.printf(70, 5, id(icon_font_45), red, "\U000F16BC");
           }
-          if(id(time_remaining_0).state == "0:00:00"){
-            it.printf(135, 5, id(icon_font_45), red, "\U000F0150");
+          if(id(time_remaining_0).state == "-:--:--"){
+            it.printf(125, 5, id(icon_font_45), blue, "\U000F0150");
+          } else if(id(time_remaining_0).state == "0:00:00"){
+            it.printf(125, 5, id(icon_font_45), red, "\U000F0150");
           } else {
-            it.printf(135, 5, id(icon_font_45), lime, "\U000F0150");
+            it.printf(125, 5, id(icon_font_45), lime, "\U000F0150");
           }
           if(id(mute_switch).state) {
-            it.printf(190, 5, id(icon_font_45), red, "\U000F036D");
+            it.printf(180, 5, id(icon_font_45), red, "\U000F036D");
           } else {
-            it.printf(190, 5, id(icon_font_45), lime, "\U000F036C");
+            it.printf(180, 5, id(icon_font_45), blue, "\U000F036C");
           }
           if(id(alarm_status).state == "disarmed") {
             it.printf(250, 5, id(icon_font_45), red, "\U000F099E");
@@ -94,7 +100,7 @@ esphome:
       - display.page.show: loading_page
       - component.update: s3_box_lcd
       - script.execute: saver_enabled
-      - lambda: id(time_remaining_0).publish_state ("0:00:00");
+      - lambda: id(time_remaining_0).publish_state ("-:--:--");
       - if:
           condition:
             switch.is_on: output_audio
@@ -464,7 +470,7 @@ globals:
   - id: speaker_volume
     type: int
     restore_value: no
-    initial_value: '5'
+    initial_value: "5"
   - id: media_state
     type: bool
     restore_value: no
@@ -783,6 +789,31 @@ sensor:
     entity_category: "diagnostic"
     device_class: ""
 
+  - platform: homeassistant
+    entity_id: climate.${climate_device_1}
+    id: climate_cur_temp_1
+    attribute: current_temperature
+    on_value:
+      component.update: s3_box_lcd
+  - platform: homeassistant
+    entity_id: climate.${climate_device_1}
+    id: climate_tgt_temp_1
+    attribute: temperature
+    on_value:
+      component.update: s3_box_lcd
+  - platform: homeassistant
+    entity_id: climate.${climate_device_2}
+    id: climate_cur_temp_2
+    attribute: current_temperature
+    on_value:
+      component.update: s3_box_lcd
+  - platform: homeassistant
+    entity_id: climate.${climate_device_2}
+    id: climate_tgt_temp_2
+    attribute: temperature
+    on_value:
+      component.update: s3_box_lcd
+
 text_sensor:
   - id: text_request
     platform: template
@@ -839,6 +870,18 @@ text_sensor:
   - platform: template
     id: time_display_format
     update_interval: never
+
+  - platform: homeassistant
+    entity_id: climate.${climate_device_1}
+    id: climate_mode_1
+    on_value:
+      component.update: s3_box_lcd
+  - platform: homeassistant
+    entity_id: climate.${climate_device_2}
+    id: climate_mode_2
+    on_value:
+      component.update: s3_box_lcd
+
   - platform: homeassistant
     entity_id: media_player.${external_media_player}
     id: ha_media_status
@@ -1051,7 +1094,7 @@ voice_assistant:
   microphone: box_mic
   media_player: speaker_media_player
   micro_wake_word: mww
-  use_wake_word: true
+  use_wake_word: false
   noise_suppression_level: 2
   auto_gain: 31dBFS
   volume_multiplier: 2.0
@@ -1231,7 +1274,7 @@ voice_assistant:
     - script.execute: timer_ending
     - component.update: s3_box_lcd
   on_timer_cancelled:
-    - lambda: id(time_remaining_0).publish_state ("0:00:00");
+    - lambda: id(time_remaining_0).publish_state ("-:--:--");
     - component.update: s3_box_lcd
   on_timer_updated:
     - component.update: s3_box_lcd
@@ -1520,21 +1563,21 @@ display:
       - id: idle_page ##### home page ######
         lambda: |-
           ${page_header}
-          it.printf(20, 75, id(icon_font_75), blue,"\U000F050F");
-          it.printf(120, 75, id(icon_font_75), yellow,"\U000F06E8" );
-          it.printf(220, 75, id(icon_font_75), purple,"\U000F0210");
-          it.printf(20, 155, id(icon_font_75), red,"\U000F075A");
-          it.printf(120, 155, id(icon_font_75), blue,"\U000F0FCE");
-          it.printf(220, 155, id(icon_font_75), lime,"\U000F08D6");
+          it.printf(20, 75, id(icon_font_75), blue, "\U000F050F");
+          it.printf(120, 75, id(icon_font_75), yellow, "\U000F06E8");
+          it.printf(220, 75, id(icon_font_75), purple, "\U000F0210");
+          it.printf(20, 155, id(icon_font_75), red, "\U000F075A");
+          it.printf(120, 155, id(icon_font_75), blue, "\U000F0FCE");
+          it.printf(220, 155, id(icon_font_75), lime, "\U000F08D6");
 
-      - id: template_page ##### template page ##]##
+      - id: template_page ##### template page #####
         lambda: |-
           ${page_header}
-          it.printf(20, 75, id(icon_font_75), light_blue,"\U000F06E8");
-          it.printf(120, 75, id(icon_font_75), light_blue,"\U000F06E8");
+          it.printf(20, 75, id(icon_font_75), light_blue, "\U000F06E8");
+          it.printf(120, 75, id(icon_font_75), light_blue, "\U000F06E8");
           it.printf(220, 75, id(icon_font_75), light_blue, "\U000F06E8");
-          it.printf(20, 155, id(icon_font_75), light_blue,"\U000F06E8");
-          it.printf(120, 155, id(icon_font_75), light_blue,"\U000F06E8");
+          it.printf(20, 155, id(icon_font_75), light_blue, "\U000F06E8");
+          it.printf(120, 155, id(icon_font_75), light_blue, "\U000F06E8");
           it.printf(220, 155, id(icon_font_75), light_blue, "\U000F06E8");
 
       - id: info_page ##### info page #####
@@ -1546,6 +1589,67 @@ display:
           it.printf(160, 145, id(consola_22), yellow, TextAlign::CENTER, "${name}.local");
           it.printf(160, 175, id(consola_22), light_blue, TextAlign::CENTER, "Device Uptime DDD:H:M:S");
           it.printf(160, 195, id(consola_22), yellow, TextAlign::CENTER, "%s", id(up_sens_text).state.c_str());
+
+      - id: climate_page ##### climate page #####
+        lambda: |-
+          ${page_header}
+          it.printf(20, 75, id(icon_font_60), blue, "\U000F0B28");
+          it.printf(160, 115, id(consola_50), light_blue, TextAlign::CENTER, "%.0f/%.0f", id(climate_cur_temp_1).state, id(climate_tgt_temp_1).state);
+          it.printf(240, 75, id(icon_font_60), red, "\U000F0B2A");
+          it.printf(20, 155, id(icon_font_60), blue, "\U000F0B28");
+          it.printf(160, 195, id(consola_50), light_blue, TextAlign::CENTER, "%.0f/%.0f", id(climate_cur_temp_2).state, id(climate_tgt_temp_2).state);
+          it.printf(240, 155, id(icon_font_60), red, "\U000F0B2A");
+
+      - id: lights_page ##### lights page ####
+        lambda: |-
+          ${page_header}
+          it.printf(20, 75, id(icon_font_75), light_blue, "\U000F0335");
+          it.printf(120, 75, id(icon_font_75), light_blue, "\U000F0335");
+          it.printf(220, 75, id(icon_font_75), light_blue, "\U000F0335");
+          it.printf(20, 155, id(icon_font_75), light_blue, "\U000F0335");
+          it.printf(120, 155, id(icon_font_75), light_blue, "\U000F0335");
+          it.printf(220, 155, id(icon_font_75), light_blue, "\U000F0335");
+
+      - id: media_page ##### media player page #####
+        lambda: |-
+          ${page_header}
+          if(id(media_state) == true) {
+                 it.printf(160, 80, id(consola_22), lime, TextAlign::CENTER, "Playing");
+          } else {
+                 it.printf(160, 80, id(consola_22), light_blue, TextAlign::CENTER, "Nothing Playing");
+          }
+          it.printf(20, 100, id(icon_font_75), blue, "\U000F075E");
+          it.printf(120, 100, id(icon_font_75), blue, "\U000F040E");
+          it.printf(220, 100, id(icon_font_75), blue, "\U000F075D");
+          if(id(media_mute).state) {
+                  it.printf(120, 165, id(icon_font_75), red, "\U000F0581");
+          } else {
+                  it.printf(120, 165, id(icon_font_75), lime, "\U000F057E");
+          }
+      - id: ext_media_page ##### media player page #####
+        lambda: |-
+          ${page_header}
+          it.printf(160, 80, id(consola_22), lime, TextAlign::CENTER, id(ha_media_status).state.c_str());
+          it.printf(20, 100, id(icon_font_75), blue, "\U000F04AE");
+          it.printf(120, 100, id(icon_font_75), blue, "\U000F040E");
+          it.printf(220, 100, id(icon_font_75), blue, "\U000F04AD");
+          if(id(ext_media_mute).state) {
+                  it.printf(120, 165, id(icon_font_75), red, "\U000F0581");
+          } else {
+                  it.printf(120, 165, id(icon_font_75), lime, "\U000F057E");
+          }
+          it.printf(20, 165, id(icon_font_75), blue, "\U000F075E");
+          it.printf(220, 165, id(icon_font_75), blue, "\U000F075D");
+
+      - id: scenes_page ##### scenes page #####
+        lambda: |-
+          ${page_header}
+          it.printf(20, 75, id(icon_font_75), light_blue, "\U000F0FCE");
+          it.printf(120, 75, id(icon_font_75), light_blue, "\U000F0FCE");
+          it.printf(220, 75, id(icon_font_75), light_blue, "\U000F0FCE");
+          it.printf(20, 155, id(icon_font_75), light_blue, "\U000F0FCE");
+          it.printf(120, 155, id(icon_font_75), light_blue, "\U000F0FCE");
+          it.printf(220, 155, id(icon_font_75), light_blue, "\U000F0FCE");
 
       - id: ss_set_page ##### screen saver settings page #####
         lambda: |-
@@ -1594,68 +1698,6 @@ display:
                  it.printf(255, 195, id(icon_font_45), blue_drk, "\U000F0A19");
           }
 
-      - id: climate_page ##### climate page #####
-        lambda: |-
-          ${page_header}
-          it.printf(20, 75, id(icon_font_75), light_blue,"\U000F050F");
-          it.printf(120, 75, id(icon_font_75), light_blue,"\U000F050F");
-          it.printf(220, 75, id(icon_font_75), light_blue, "\U000F050F");
-          it.printf(20, 155, id(icon_font_75), light_blue,"\U000F050F");
-          it.printf(120, 155, id(icon_font_75), light_blue,"\U000F050F");
-          it.printf(220, 155, id(icon_font_75), light_blue, "\U000F050F");
-
-      - id: lights_page ##### lights page ####
-        lambda: |-
-          ${page_header}
-          it.printf(20, 75, id(icon_font_75), light_blue,"\U000F0335");
-          it.printf(120, 75, id(icon_font_75), light_blue,"\U000F0335");
-          it.printf(220, 75, id(icon_font_75), light_blue, "\U000F0335");
-          it.printf(20, 155, id(icon_font_75), light_blue,"\U000F0335");
-          it.printf(120, 155, id(icon_font_75), light_blue,"\U000F0335");
-          it.printf(220, 155, id(icon_font_75), light_blue, "\U000F0335");
-
-      - id: media_page ##### media player page #####
-        lambda: |-
-          ${page_header}
-          if(id(media_state) == true) {
-                 it.printf(160, 80, id(consola_22), lime, TextAlign::CENTER, "Playing");
-          } else {
-                 it.printf(160, 80, id(consola_22), light_blue, TextAlign::CENTER, "Nothing Playing");
-          }
-          it.printf(20, 100, id(icon_font_75), blue,"\U000F075E");
-          it.printf(120, 100, id(icon_font_75), blue,"\U000F040E");
-          it.printf(220, 100, id(icon_font_75), blue,"\U000F075D");
-          if(id(media_mute).state) {
-                  it.printf(120, 165, id(icon_font_75), red,"\U000F0581");
-          } else {
-                  it.printf(120, 165, id(icon_font_75), lime,"\U000F057E");
-          }
-      - id: ext_media_page ##### media player page #####
-        lambda: |-
-          ${page_header}
-          it.printf(160, 80, id(consola_22), lime, TextAlign::CENTER, id(ha_media_status).state.c_str());
-          it.printf(20, 100, id(icon_font_75), blue,"\U000F04AE");
-          it.printf(120, 100, id(icon_font_75), blue,"\U000F040E");
-          it.printf(220, 100, id(icon_font_75), blue,"\U000F04AD");
-          if(id(ext_media_mute).state) {
-                  it.printf(120, 165, id(icon_font_75), red,"\U000F0581");
-          } else {
-                  it.printf(120, 165, id(icon_font_75), lime,"\U000F057E");
-          }
-          it.printf(20, 165, id(icon_font_75), blue,"\U000F075E");
-          it.printf(220, 165, id(icon_font_75), blue,"\U000F075D");
-
-      - id: scenes_page ##### scenes page #####
-        lambda: |-
-          ${page_header}
-          it.printf(20, 75, id(icon_font_75), light_blue,"\U000F0FCE");
-          it.printf(120, 75, id(icon_font_75), light_blue,"\U000F0FCE");
-          it.printf(220, 75, id(icon_font_75), light_blue, "\U000F0FCE");
-          it.printf(20, 155, id(icon_font_75), light_blue,"\U000F0FCE");
-          it.printf(120, 155, id(icon_font_75), light_blue,"\U000F0FCE");
-          it.printf(220, 155, id(icon_font_75), light_blue, "\U000F0FCE");
-
-
       - id: loading_page ### loading page #####
         lambda: |-
           it.fill(Color::BLACK);
@@ -1671,7 +1713,7 @@ display:
           it.fill(Color::BLACK);
           it.image((it.get_width() / 2), (it.get_height() / 2), id(thinking_img), ImageAlign::CENTER);
           if (id(display_conversation).state) {
-            it.filled_rectangle(0 , 0 , 320 , 30 , Color::WHITE );
+            it.filled_rectangle(0, 0, 320, 30, Color::WHITE);
             it.printf(10, 10, id(consola_16), Color::BLACK, "%s", id(text_request).state.c_str());
           }
       - id: replying_page
@@ -1679,8 +1721,8 @@ display:
           it.fill(Color::BLACK);
           it.image((it.get_width() / 2), (it.get_height() / 2), id(replying_img), ImageAlign::CENTER);
           if (id(display_conversation).state) {
-            it.filled_rectangle(0 , 0 , 320 , 30 , Color::WHITE );
-            it.filled_rectangle(0 , 210 , 320 , 30 , Color::WHITE );
+            it.filled_rectangle(0, 0, 320, 30, Color::WHITE);
+            it.filled_rectangle(0, 210, 320, 30, Color::WHITE);
             it.printf(10, 10, id(consola_16), Color::BLACK, "%s", id(text_request).state.c_str());
             it.printf(10, 220, id(consola_16), Color::BLACK, "%s", id(text_response).state.c_str());
           }
@@ -1705,8 +1747,8 @@ display:
         lambda: |-
           it.fill(id(black));
 
-          const char *days[] {"${sunday}","${monday}","${tuesday}","${wednesday}","${thursday}","${friday}","${saturday}"};
-          const char *months[] {"${jan}","${feb}","${mar}","${apr}","${may}","${jun}","${jul}","${aug}","${sept}","${oct}","${nov}","${dec}"};
+          const char *days[] {"${sunday}", "${monday}", "${tuesday}", "${wednesday}", "${thursday}", "${friday}", "${saturday}"};
+          const char *months[] {"${jan}", "${feb}", "${mar}", "${apr}", "${may}", "${jun}", "${jul}", "${aug}", "${sept}", "${oct}", "${nov}", "${dec}"};
           it.printf(160, 28, id(consola_22), light_blue, TextAlign::CENTER, "%s %d %s", days[id(ha_time).now().day_of_week - 1], id(ha_time).now().day_of_month, months[id(ha_time).now().month - 1]);
           if(id(time_display_format).state == "24 Hr") {
             it.strftime(160, 88, id(consola_82), TextAlign::CENTER, "%H:%M", id(ha_time).now());
@@ -1726,15 +1768,15 @@ display:
         lambda: |-
           ${page_header}
           it.printf(160, 65, id(consola_22), light_blue, TextAlign::CENTER, "settings");
-          it.printf(20, 80, id(icon_font_45), light_blue,"\U000F036F");
-          it.printf(140, 80, id(icon_font_45), light_blue,"\U000F0502");
+          it.printf(20, 80, id(icon_font_45), light_blue, "\U000F036F");
+          it.printf(140, 80, id(icon_font_45), light_blue, "\U000F0502");
           it.printf(255, 80, id(icon_font_45), light_blue, "\U000F1C6F");
-          it.printf(15, 210, id(consola_22), light_blue,"Device");
+          it.printf(15, 210, id(consola_22), light_blue, "Device");
           it.printf(245, 130, id(consola_22), light_blue, "Info");
-          it.printf(20, 160, id(icon_font_45), light_blue,"\U000F08D6");
+          it.printf(20, 160, id(icon_font_45), light_blue, "\U000F08D6");
           it.printf(255, 160, id(icon_font_45), light_blue, "\U000F05CB");
-          it.printf(15, 130, id(consola_22), light_blue,"Voice");
-          it.printf(135, 130, id(consola_22), light_blue,"Saver");
+          it.printf(15, 130, id(consola_22), light_blue, "Voice");
+          it.printf(135, 130, id(consola_22), light_blue, "Saver");
           it.printf(245, 210, id(consola_22), light_blue, "Test");
           it.image((it.get_width() / 2), 195, id(logo_img), ImageAlign::CENTER);
 
@@ -1752,7 +1794,7 @@ display:
           it.printf(238, 148, id(consola_22), light_blue, TextAlign::CENTER, "%.f", id(s_default_brightness).state);
           it.printf(160, 125, id(icon_font_45), lime, TextAlign::LEFT, "\U000F0B2C");
           it.printf(315, 125, id(icon_font_45), lime, TextAlign::RIGHT, "\U000F0B26");
-          it.rectangle(215 , 125 , 46 , 40 , light_blue);
+          it.rectangle(215, 125, 46, 40, light_blue);
           it.printf(65, 180, id(consola_22), light_blue, "Time Format:");
           it.printf(210, 180, id(consola_22), lime, "%s", id(time_display_format).state.c_str());
 
@@ -1766,16 +1808,16 @@ display:
           it.printf(185, 80, id(consola_14), light_blue, "Dim Brightness");
           it.printf(105, 100, id(icon_font_45), lime, TextAlign::LEFT, "\U000F0B2C");
           it.printf(65, 100, id(icon_font_45), lime, TextAlign::RIGHT, "\U000F0B26");
-          it.rectangle(65 , 105 , 40 , 40 , lime);
+          it.rectangle(65, 105, 40, 40, lime);
           it.printf(85, 125, id(consola_22), light_blue, TextAlign::CENTER, "%.f", id(s_saver_delay).state);
           it.printf(20, 160, id(consola_14), light_blue, "Screen off delay");
           it.printf(105, 180, id(icon_font_45), lime, TextAlign::LEFT, "\U000F0B2C");
           it.printf(65, 180, id(icon_font_45), lime, TextAlign::RIGHT, "\U000F0B26");
-          it.rectangle(65 , 180 , 40 , 40 , lime);
+          it.rectangle(65, 180, 40, 40, lime);
           it.printf(85, 200, id(consola_22), light_blue, TextAlign::CENTER, "%.f", id(s_saver_blank_delay).state);
           it.printf(255, 100, id(icon_font_45), pink, TextAlign::LEFT, "\U000F0B2C");
           it.printf(215, 100, id(icon_font_45), pink, TextAlign::RIGHT, "\U000F0B26");
-          it.rectangle(215 , 105 , 40 , 40 , pink);
+          it.rectangle(215, 105, 40, 40, pink);
           it.printf(235, 125, id(consola_22), light_blue, TextAlign::CENTER, "%.f", id(s_saver_brightness).state);
 
       - id: time_remaining_page ##### timer countdown page #####
@@ -2385,106 +2427,80 @@ binary_sensor:
 #### climate page #####
   - platform: touchscreen
     page_id: climate_page
-    id: climate1
+    id: climate1d
     internal: true
-    x_min: 5
-    x_max: 105
-    y_min: 90
-    y_max: 170
-          #### make sure that the following 4 lines are uncommented by removing the prefixed '#' ###
-    # on_click:
-      # min_length: 10ms
-      # max_length: 500ms
-      # then:
-
-      #### add your action here - make sure to uncomment the following  line by removing the prefixed '#' and keep these below your action #####
-
-        # - component.update: s3_box_lcd
+    x_min: 10
+    x_max: 70
+    y_min: 75
+    y_max: 150
+    on_click:
+      min_length: 10ms
+      max_length: 500ms
+      then:
+        - homeassistant.service:
+            service: climate.set_temperature
+            data:
+              entity_id: climate.${climate_device_1}
+              temperature: !lambda return id(climate_tgt_temp_1).state - 1;
+        - component.update: s3_box_lcd
 
   - platform: touchscreen
     page_id: climate_page
-    id: climate2
+    id: climate1u
     internal: true
-    x_min: 110
-    x_max: 210
-    y_min: 90
-    y_max: 170
-          #### make sure that the following 4 lines are uncommented by removing the prefixed '#' ###
-    # on_click:
-      # min_length: 10ms
-      # max_length: 500ms
-      # then:
-      #### add your action here - make sure to uncomment the following  line by removing the prefixed '#' and keep these below your action #####
-
-        # - component.update: s3_box_lcd
+    x_min: 230
+    x_max: 290
+    y_min: 75
+    y_max: 150
+    on_click:
+      min_length: 10ms
+      max_length: 500ms
+      then:
+        - homeassistant.service:
+            service: climate.set_temperature
+            data:
+              entity_id: climate.${climate_device_1}
+              temperature: !lambda return id(climate_tgt_temp_1).state + 1;
+        - component.update: s3_box_lcd
 
   - platform: touchscreen
     page_id: climate_page
-    id: climate3
+    id: climate2d
     internal: true
-    x_min: 215
-    x_max: 315
-    y_min: 90
-    y_max: 170
-          #### make sure that the following 4 lines are uncommented by removing the prefixed '#' ###
-    # on_click:
-      # min_length: 10ms
-      # max_length: 500ms
-      # then:
-      #### add your action here - make sure to uncomment the following  line by removing the prefixed '#' and keep these below your action #####
-
-        # - component.update: s3_box_lcd
+    x_min: 10
+    x_max: 70
+    y_min: 160
+    y_max: 235
+    on_click:
+      min_length: 10ms
+      max_length: 500ms
+      then:
+        - homeassistant.service:
+            service: climate.set_temperature
+            data:
+              entity_id: climate.${climate_device_2}
+              temperature: !lambda return id(climate_tgt_temp_2).state - 1;
+        - component.update: s3_box_lcd
 
   - platform: touchscreen
     page_id: climate_page
-    id: climate4
+    id: climate2u
     internal: true
-    x_min: 5
-    x_max: 105
-    y_min: 175
-    y_max: 240
-          #### make sure that the following 4 lines are uncommented by removing the prefixed '#' ###
-    # on_click:
-      # min_length: 10ms
-      # max_length: 500ms
-      # then:
-      #### add your action here - make sure to uncomment the following  line by removing the prefixed '#' and keep these below your action #####
+    x_min: 230
+    x_max: 290
+    y_min: 160
+    y_max: 235
+    on_click:
+      min_length: 10ms
+      max_length: 500ms
+      then:
+        - homeassistant.service:
+            service: climate.set_temperature
+            data:
+              entity_id: climate.${climate_device_2}
+              temperature: !lambda return id(climate_tgt_temp_2).state + 1;
+        - component.update: s3_box_lcd
 
-        # - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    page_id: climate_page
-    id: climate5
-    internal: true
-    x_min: 110
-    x_max: 210
-    y_min: 175
-    y_max: 240
-          #### make sure that the following 4 lines are uncommented by removing the prefixed '#' ###
-    # on_click:
-      # min_length: 10ms
-      # max_length: 500ms
-      # then:
-      #### add your action here - make sure to uncomment the following  line by removing the prefixed '#' and keep these below your action #####
-
-        # - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    page_id: climate_page
-    id: climate6
-    internal: true
-    x_min: 215
-    x_max: 315
-    y_min: 175
-    y_max: 240
-          #### make sure that the following 4 lines are uncommented by removing the prefixed '#' ###
-    # on_click:
-      # min_length: 10ms
-      # max_length: 500ms
-      # then:
-      #### add your action here - make sure to uncomment the following  line by removing the prefixed '#' and keep these below your action #####
-
-        # - component.update: s3_box_lcd
 ##### lights page #####
   - platform: touchscreen
     page_id: lights_page
