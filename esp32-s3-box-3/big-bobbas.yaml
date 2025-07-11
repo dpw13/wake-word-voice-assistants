@@ -26,6 +26,21 @@ substitutions:
   light_text_5: Dining Rm
   light_text_6: Outside
 
+  scene_1: bedtime
+  scene_2: evening
+  scene_3: records
+  scene_4: lights_off
+
+  scene_text_1: Bedtime
+  scene_text_2: Evening
+  scene_text_3: Records
+  scene_text_4: Lights Off
+
+  scene_icon_1: "\U000F1B94"
+  scene_icon_2: "\U000F059B"
+  scene_icon_3: "\U000F099A"
+  scene_icon_4: "\U000F0594"
+
   # The amount to increase the light each press. 255 is the max, 64 is about 25%.
   light_increment: "64"
 
@@ -83,13 +98,14 @@ substitutions:
           } else {
             it.printf(75, 5, id(icon_font_30), lime, "\U000F0150");
           }
+          // Mic icon is narrower than the others
           if(id(mute_switch).state) {
-            it.printf(110, 5, id(icon_font_30), red, "\U000F036D");
+            it.printf(105, 5, id(icon_font_30), red, "\U000F036D");
           } else {
-            it.printf(110, 5, id(icon_font_30), blue, "\U000F036C");
+            it.printf(105, 5, id(icon_font_30), blue, "\U000F036C");
           }
           if(id(media_mute).state) {
-            it.printf(145, 5, id(icon_font_30), red, "\U000F0581");
+            it.printf(135, 5, id(icon_font_30), red, "\U000F0581");
           } else {
             const char * icon;
             if(id(speaker_volume).state == 0) {
@@ -101,7 +117,7 @@ substitutions:
             } else {
               icon = "\U000F057E";
             }
-            it.printf(145, 5, id(icon_font_30), blue, icon);
+            it.printf(135, 5, id(icon_font_30), blue, icon);
           }
 
           if(id(time_display_format).state == "24 Hr") {
@@ -1450,6 +1466,8 @@ font:
       - "\U000F057F"#volume-low
       - "\U000F0580"#volume-medium
       - "\U000F0581"#volume-off (volume-high plus strike-through)
+      - "\U000F0594"#weather-night
+      - "\U000F059B"#weather-sunset-down
       - "\U000F05CB"#voice
       - "\U000F068A"#alarm home
       - "\U000F06E8"#light bulb illuminated
@@ -1465,6 +1483,7 @@ font:
       - "\U000F0875"#car miles low
       - "\U000F087B"#api disconnected
       - "\U000F08D6"#settings
+      - "\U000F099A"#record-player
       - "\U000F099D"#alarm away
       - "\U000F099E"#disarmed
       - "\U000F0A19"#toggle off
@@ -1493,6 +1512,7 @@ font:
       - "\U000F1987"#floods
       - "\U000F1A12"#home button
       - "\U000F1A1B"#gas
+      - "\U000F1B94"#bed-clock
       - "\U000F1C3B"#battery charging/usb powered
       - "\U000F1C6F"#info
 
@@ -1702,12 +1722,16 @@ display:
       - id: scenes_page ##### scenes page #####
         lambda: |-
           ${page_header}
-          it.printf(${col_1}, ${row_1}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0FCE");
-          it.printf(${col_2}, ${row_1}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0FCE");
-          it.printf(${col_3}, ${row_1}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0FCE");
-          it.printf(${col_1}, ${row_2}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0FCE");
-          it.printf(${col_2}, ${row_2}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0FCE");
-          it.printf(${col_3}, ${row_2}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0FCE");
+          it.printf(${col_1}, ${row_1} - 20, id(icon_font_60), lt_blue, TextAlign::CENTER, "${scene_icon_1}");
+          it.printf(${col_1}, ${row_1} + 25, id(consola_18), lt_grey, TextAlign::CENTER, "${scene_text_1}");
+          it.printf(${col_2}, ${row_1} - 20, id(icon_font_60), lt_blue, TextAlign::CENTER, "${scene_icon_2}");
+          it.printf(${col_2}, ${row_1} + 25, id(consola_18), lt_grey, TextAlign::CENTER, "${scene_text_2}");
+          it.printf(${col_3}, ${row_1} - 20, id(icon_font_60), lt_blue, TextAlign::CENTER, "${scene_icon_3}");
+          it.printf(${col_3}, ${row_1} + 25, id(consola_18), lt_grey, TextAlign::CENTER, "${scene_text_3}");
+          it.printf(${col_1}, ${row_2} - 20, id(icon_font_60), lt_blue, TextAlign::CENTER, "${scene_icon_4}");
+          it.printf(${col_1}, ${row_2} + 25, id(consola_18), lt_grey, TextAlign::CENTER, "${scene_text_4}");
+          //it.printf(${col_2}, ${row_2} - 20, id(icon_font_60), lt_blue, TextAlign::CENTER, "\U000F0FCE");
+          //it.printf(${col_3}, ${row_2} - 20, id(icon_font_60), lt_blue, TextAlign::CENTER, "\U000F0FCE");
 
       - id: ss_set_page ##### screen saver settings page #####
         lambda: |-
@@ -2947,14 +2971,15 @@ binary_sensor:
     x_max: 105
     y_min: 45
     y_max: 135
-          #### make sure that the following 4 lines are uncommented by removing the prefixed '#' ###
-    # on_click:
-      # min_length: 10ms
-      # max_length: 500ms
-      # then:
-      #### add your action here - make sure to uncomment the following  line by removing the prefixed '#' and keep these below your action #####
-
-        # - component.update: s3_box_lcd
+    on_click:
+      min_length: 10ms
+      max_length: 500ms
+      then:
+        - homeassistant.service:
+            service: scene.turn_on
+            data:
+              entity_id: scene.${scene_1}
+        - component.update: s3_box_lcd
 
   - platform: touchscreen
     page_id: scenes_page
@@ -2964,13 +2989,15 @@ binary_sensor:
     x_max: 210
     y_min: 45
     y_max: 135
-    # on_click:
-    #   min_length: 10ms
-    #   max_length: 500ms
-
-        #### make sure that the following  line are uncommented and sit at the bottom of this block after your action ###
-
-            # - component.update: s3_box_lcd
+    on_click:
+      min_length: 10ms
+      max_length: 500ms
+      then:
+        - homeassistant.service:
+            service: scene.turn_on
+            data:
+              entity_id: scene.${scene_2}
+        - component.update: s3_box_lcd
 
 
   - platform: touchscreen
@@ -2981,13 +3008,15 @@ binary_sensor:
     x_max: 315
     y_min: 45
     y_max: 135
-    # on_click:
-    #   min_length: 10ms
-    #   max_length: 500ms
-
-        #### make sure that the following  line are uncommented and sit at the bottom of this block after your action ###
-
-            # - component.update: s3_box_lcd
+    on_click:
+      min_length: 10ms
+      max_length: 500ms
+      then:
+        - homeassistant.service:
+            service: scene.turn_on
+            data:
+              entity_id: scene.${scene_3}
+        - component.update: s3_box_lcd
 
   - platform: touchscreen
     page_id: scenes_page
@@ -2997,14 +3026,15 @@ binary_sensor:
     x_max: 105
     y_min: 145
     y_max: 240
-    # on_click:
-    #   min_length: 10ms
-    #   max_length: 500ms
-
-        #### make sure that the following  line are uncommented and sit at the bottom of this block after your action ###
-
-            # - component.update: s3_box_lcd
-
+    on_click:
+      min_length: 10ms
+      max_length: 500ms
+      then:
+        - homeassistant.service:
+            service: scene.turn_on
+            data:
+              entity_id: scene.${scene_4}
+        - component.update: s3_box_lcd
 
   - platform: touchscreen
     page_id: scenes_page
