@@ -12,12 +12,30 @@ substitutions:
   climate_device_1: living_room
   climate_device_2: bedroom
 
+  light_device_1: living_room_lights
+  light_device_2: living_room_ceiling_fan_light
+  light_device_3: upstairs
+  light_device_4: party_lights
+  light_device_5: dining_room_pendants
+
+  # The amount to increase the light each press. 255 is the max, 64 is about 25%.
+  light_increment: "64"
+
   # status bar is 0-40, main screen is 40-240
   # Equal spacing from 40 to 240 in 2 rows is 90, 190 (at row center)
+  # - 0
+  # -- 40
+  # x 90
+  # -- 140
+  # x 190
+  # -- 240
   row_1: "90"
   row_2: "190"
 
   # 3 columns 0-320
+  # |   x   |   x   |   x   |
+  # |  53   |  160  |  267  |
+  # 0      107     213
   col_1: "53"
   col_2: "160"
   col_3: "267"
@@ -554,6 +572,7 @@ number:
       - component.update: s_default_brightness
       - script.execute: saver_enabled
       - component.update: s3_box_lcd
+
 button:
   - platform: restart
     id: reboot
@@ -775,6 +794,37 @@ sensor:
     entity_id: climate.${climate_device_2}
     id: climate_tgt_temp_2
     attribute: temperature
+    on_value:
+      component.update: s3_box_lcd
+
+  - platform: homeassistant
+    entity_id: light.${light_device_1}
+    id: light_brightness_1
+    attribute: brightness
+    on_value:
+      component.update: s3_box_lcd
+  - platform: homeassistant
+    entity_id: light.${light_device_2}
+    id: light_brightness_2
+    attribute: brightness
+    on_value:
+      component.update: s3_box_lcd
+  - platform: homeassistant
+    entity_id: light.${light_device_3}
+    id: light_brightness_3
+    attribute: brightness
+    on_value:
+      component.update: s3_box_lcd
+  - platform: homeassistant
+    entity_id: light.${light_device_4}
+    id: light_brightness_4
+    attribute: brightness
+    on_value:
+      component.update: s3_box_lcd
+  - platform: homeassistant
+    entity_id: light.${light_device_5}
+    id: light_brightness_5
+    attribute: brightness
     on_value:
       component.update: s3_box_lcd
 
@@ -1439,12 +1489,12 @@ color:
     hex: '3498db'
   - id: amber
     hex: 'f7dc6f'
+  - id: yellow
+    hex: 'f7d73f'
   - id: lime
     hex: '5dea70'
   - id: pink
     hex: 'f5b7b1'
-  - id: yellow
-    hex: 'f7d73f'
   - id: black
     hex: '000000'
   - id: white
@@ -1455,6 +1505,11 @@ color:
     hex: 'a9cce3'
   - id: lt_grey
     hex: 'c0c0c0'
+  # Used for rendering lights
+  - id: dk_yellow
+    hex: '7d6608'
+  - id: lt_yellow
+    hex: 'f9e79f'
   - id: dk_blue
     hex: '1a5276'
   - id: bg_blue
@@ -1543,12 +1598,30 @@ display:
       - id: lights_page ##### lights page ####
         lambda: |-
           ${page_header}
-          it.printf(${col_1}, ${row_1}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0335");
-          it.printf(${col_2}, ${row_1}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0335");
-          it.printf(${col_3}, ${row_1}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0335");
-          it.printf(${col_1}, ${row_2}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0335");
-          it.printf(${col_2}, ${row_2}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0335");
-          it.printf(${col_3}, ${row_2}, id(icon_font_75), lt_blue, TextAlign::CENTER, "\U000F0335");
+          Color active_color;
+          float amnt_f;
+          uint8_t amnt;
+          amnt_f = id(light_brightness_1).state;
+          amnt = isnan(amnt_f) ? 0 : uint8_t(amnt_f);
+          active_color = amnt == 0 ? bg_charcoal : dk_yellow.gradient(lt_yellow, amnt);
+          it.printf(${col_1}, ${row_1}, id(icon_font_75), active_color, TextAlign::CENTER, "\U000F0335");
+          amnt_f = id(light_brightness_2).state;
+          amnt = isnan(amnt_f) ? 0 : uint8_t(amnt_f);
+          active_color = amnt == 0 ? bg_charcoal : dk_yellow.gradient(lt_yellow, amnt);
+          it.printf(${col_2}, ${row_1}, id(icon_font_75), active_color, TextAlign::CENTER, "\U000F0335");
+          amnt_f = id(light_brightness_3).state;
+          amnt = isnan(amnt_f) ? 0 : uint8_t(amnt_f);
+          active_color = amnt == 0 ? bg_charcoal : dk_yellow.gradient(lt_yellow, amnt);
+          it.printf(${col_3}, ${row_1}, id(icon_font_75), active_color, TextAlign::CENTER, "\U000F0335");
+          amnt_f = id(light_brightness_4).state;
+          amnt = isnan(amnt_f) ? 0 : uint8_t(amnt_f);
+          active_color = amnt == 0 ? bg_charcoal : dk_yellow.gradient(lt_yellow, amnt);
+          it.printf(${col_1}, ${row_2}, id(icon_font_75), active_color, TextAlign::CENTER, "\U000F0335");
+          amnt_f = id(light_brightness_5).state;
+          amnt = isnan(amnt_f) ? 0 : uint8_t(amnt_f);
+          active_color = amnt == 0 ? bg_charcoal : dk_yellow.gradient(lt_yellow, amnt);
+          it.printf(${col_2}, ${row_2}, id(icon_font_75), active_color, TextAlign::CENTER, "\U000F0335");
+          it.printf(${col_3}, ${row_2}, id(icon_font_75), bg_charcoal, TextAlign::CENTER, "\U000F0335");
 
       - id: media_page ##### media player page #####
         lambda: |-
@@ -2278,8 +2351,8 @@ binary_sensor:
     internal: true
     x_min: 5
     x_max: 105
-    y_min: 90
-    y_max: 170
+    y_min: 45
+    y_max: 135
     on_click:
       min_length: 10ms
       max_length: 500ms
@@ -2293,8 +2366,8 @@ binary_sensor:
     internal: true
     x_min: 110
     x_max: 210
-    y_min: 90
-    y_max: 170
+    y_min: 45
+    y_max: 135
     on_click:
       min_length: 10ms
       max_length: 500ms
@@ -2308,8 +2381,8 @@ binary_sensor:
     internal: true
     x_min: 215
     x_max: 315
-    y_min: 90
-    y_max: 170
+    y_min: 45
+    y_max: 135
     on_click:
       min_length: 10ms
       max_length: 500ms
@@ -2323,7 +2396,7 @@ binary_sensor:
     internal: true
     x_min: 5
     x_max: 105
-    y_min: 175
+    y_min: 145
     y_max: 240
     on_click:
       min_length: 10ms
@@ -2345,7 +2418,7 @@ binary_sensor:
     internal: true
     x_min: 110
     x_max: 210
-    y_min: 175
+    y_min: 145
     y_max: 240
     on_click:
       min_length: 10ms
@@ -2360,7 +2433,7 @@ binary_sensor:
     internal: true
     x_min: 215
     x_max: 315
-    y_min: 175
+    y_min: 145
     y_max: 240
     on_click:
       min_length: 10ms
@@ -2453,18 +2526,26 @@ binary_sensor:
     internal: true
     x_min: 5
     x_max: 105
-    y_min: 90
-    y_max: 170
-          #### make sure that the following 4 lines are uncommented by removing the prefixed '#' ###
+    y_min: 45
+    y_max: 135
     on_click:
       min_length: 10ms
       max_length: 500ms
       then:
-      #### add your action here - make sure to uncomment the following  line by removing the prefixed '#' and keep these below your action #####
-        - homeassistant.service:
-            service: light.toggle
-            data:
-              entity_id: light.living_room_2
+        - if:
+            condition:
+              - lambda: return (!isnan(id(light_brightness_1).state) && id(light_brightness_1).state > 200.0f);
+            then:
+              - homeassistant.service:
+                  service: light.turn_off
+                  data:
+                    entity_id: light.${light_device_1}
+            else:
+              - homeassistant.service:
+                  service: light.turn_on
+                  data:
+                    entity_id: light.${light_device_1}
+                    brightness_step: "${light_increment}"
         - component.update: s3_box_lcd
 
   - platform: touchscreen
@@ -2473,16 +2554,27 @@ binary_sensor:
     internal: true
     x_min: 110
     x_max: 210
-    y_min: 90
-    y_max: 170
-          #### make sure that the following 4 lines are uncommented by removing the prefixed '#' ###
-    # on_click:
-      # min_length: 10ms
-      # max_length: 500ms
-      # then:
-      #### add your action here - make sure to uncomment the following  line by removing the prefixed '#' and keep these below your action #####
-
-        # - component.update: s3_box_lcd
+    y_min: 45
+    y_max: 135
+    on_click:
+      min_length: 10ms
+      max_length: 500ms
+      then:
+        - if:
+            condition:
+              - lambda: return (!isnan(id(light_brightness_2).state) && id(light_brightness_2).state > 200.0f);
+            then:
+              - homeassistant.service:
+                  service: light.turn_off
+                  data:
+                    entity_id: light.${light_device_2}
+            else:
+              - homeassistant.service:
+                  service: light.turn_on
+                  data:
+                    entity_id: light.${light_device_2}
+                    brightness_step: "${light_increment}"
+        - component.update: s3_box_lcd
 
   - platform: touchscreen
     page_id: lights_page
@@ -2490,16 +2582,27 @@ binary_sensor:
     internal: true
     x_min: 215
     x_max: 315
-    y_min: 90
-    y_max: 170
-          #### make sure that the following 4 lines are uncommented by removing the prefixed '#' ###
-    # on_click:
-      # min_length: 10ms
-      # max_length: 500ms
-      # then:
-      #### add your action here - make sure to uncomment the following  line by removing the prefixed '#' and keep these below your action #####
-
-        # - component.update: s3_box_lcd
+    y_min: 45
+    y_max: 135
+    on_click:
+      min_length: 10ms
+      max_length: 500ms
+      then:
+        - if:
+            condition:
+              - lambda: return (!isnan(id(light_brightness_3).state) && id(light_brightness_3).state > 200.0f);
+            then:
+              - homeassistant.service:
+                  service: light.turn_off
+                  data:
+                    entity_id: light.${light_device_3}
+            else:
+              - homeassistant.service:
+                  service: light.turn_on
+                  data:
+                    entity_id: light.${light_device_3}
+                    brightness_step: "${light_increment}"
+        - component.update: s3_box_lcd
 
   - platform: touchscreen
     page_id: lights_page
@@ -2507,16 +2610,27 @@ binary_sensor:
     internal: true
     x_min: 5
     x_max: 105
-    y_min: 175
+    y_min: 145
     y_max: 240
-          #### make sure that the following 4 lines are uncommented by removing the prefixed '#' ###
-    # on_click:
-      # min_length: 10ms
-      # max_length: 500ms
-      # then:
-      #### add your action here - make sure to uncomment the following  line by removing the prefixed '#' and keep these below your action #####
-
-        # - component.update: s3_box_lcd
+    on_click:
+      min_length: 10ms
+      max_length: 500ms
+      then:
+        - if:
+            condition:
+              - lambda: return (!isnan(id(light_brightness_4).state) && id(light_brightness_4).state > 200.0f);
+            then:
+              - homeassistant.service:
+                  service: light.turn_off
+                  data:
+                    entity_id: light.${light_device_4}
+            else:
+              - homeassistant.service:
+                  service: light.turn_on
+                  data:
+                    entity_id: light.${light_device_4}
+                    brightness_step: "${light_increment}"
+        - component.update: s3_box_lcd
 
   - platform: touchscreen
     page_id: lights_page
@@ -2524,16 +2638,27 @@ binary_sensor:
     internal: true
     x_min: 110
     x_max: 210
-    y_min: 175
+    y_min: 145
     y_max: 240
-          #### make sure that the following 4 lines are uncommented by removing the prefixed '#' ###
-    # on_click:
-      # min_length: 10ms
-      # max_length: 500ms
-      # then:
-      #### add your action here - make sure to uncomment the following  line by removing the prefixed '#' and keep these below your action #####
-
-        # - component.update: s3_box_lcd
+    on_click:
+      min_length: 10ms
+      max_length: 500ms
+      then:
+        - if:
+            condition:
+              - lambda: return (!isnan(id(light_brightness_5).state) && id(light_brightness_5).state > 200.0f);
+            then:
+              - homeassistant.service:
+                  service: light.turn_off
+                  data:
+                    entity_id: light.${light_device_5}
+            else:
+              - homeassistant.service:
+                  service: light.turn_on
+                  data:
+                    entity_id: light.${light_device_5}
+                    brightness_step: "${light_increment}"
+        - component.update: s3_box_lcd
 
   - platform: touchscreen
     page_id: lights_page
@@ -2541,7 +2666,7 @@ binary_sensor:
     internal: true
     x_min: 215
     x_max: 315
-    y_min: 175
+    y_min: 145
     y_max: 240
           #### make sure that the following 4 lines are uncommented by removing the prefixed '#' ###
     # on_click:
@@ -2746,8 +2871,8 @@ binary_sensor:
     internal: true
     x_min: 5
     x_max: 105
-    y_min: 90
-    y_max: 170
+    y_min: 45
+    y_max: 135
           #### make sure that the following 4 lines are uncommented by removing the prefixed '#' ###
     # on_click:
       # min_length: 10ms
@@ -2763,8 +2888,8 @@ binary_sensor:
     internal: true
     x_min: 110
     x_max: 210
-    y_min: 90
-    y_max: 170
+    y_min: 45
+    y_max: 135
     # on_click:
     #   min_length: 10ms
     #   max_length: 500ms
@@ -2780,8 +2905,8 @@ binary_sensor:
     internal: true
     x_min: 215
     x_max: 315
-    y_min: 90
-    y_max: 170
+    y_min: 45
+    y_max: 135
     # on_click:
     #   min_length: 10ms
     #   max_length: 500ms
@@ -2796,7 +2921,7 @@ binary_sensor:
     internal: true
     x_min: 5
     x_max: 105
-    y_min: 175
+    y_min: 145
     y_max: 240
     # on_click:
     #   min_length: 10ms
@@ -2813,7 +2938,7 @@ binary_sensor:
     internal: true
     x_min: 110
     x_max: 210
-    y_min: 175
+    y_min: 145
     y_max: 240
     # on_click:
     #   min_length: 10ms
@@ -2830,7 +2955,7 @@ binary_sensor:
     internal: true
     x_min: 215
     x_max: 315
-    y_min: 175
+    y_min: 145
     y_max: 240
     # on_click:
     #   min_length: 10ms
