@@ -9,14 +9,22 @@ substitutions:
   external_media_player: chromecast_remote  ##change this to your external media player enity_id: do not include media_player.
   home_assistant_host: http://potato6300.localdomain:8123 ##change to the full url or IP of your HA server including port
 
-  climate_device_1: living_room
-  climate_device_2: bedroom
+  climate_device_1: bedroom
+  climate_device_2: living_room
 
   light_device_1: living_room_lights
   light_device_2: living_room_ceiling_fan_light
   light_device_3: upstairs
   light_device_4: party_lights
   light_device_5: dining_room_pendants
+  light_device_6: exterior_landscape_lights
+
+  light_text_1: Living Rm
+  light_text_2: Fan
+  light_text_3: Upstairs
+  light_text_4: Party
+  light_text_5: Dining Rm
+  light_text_6: Outside
 
   # The amount to increase the light each press. 255 is the max, 64 is about 25%.
   light_increment: "64"
@@ -916,6 +924,12 @@ text_sensor:
     on_value:
       - component.update: s3_box_lcd
 
+  - platform: homeassistant
+    entity_id: light.${light_device_6}
+    id: light_state_6
+    on_value:
+      component.update: s3_box_lcd
+
 text:
   - platform: template
     name: "Notification Text"
@@ -1604,24 +1618,31 @@ display:
           amnt_f = id(light_brightness_1).state;
           amnt = isnan(amnt_f) ? 0 : uint8_t(amnt_f);
           active_color = amnt == 0 ? bg_charcoal : dk_yellow.gradient(lt_yellow, amnt);
-          it.printf(${col_1}, ${row_1}, id(icon_font_75), active_color, TextAlign::CENTER, "\U000F0335");
+          it.printf(${col_1}, ${row_1} - 20, id(icon_font_60), active_color, TextAlign::CENTER, "\U000F0335");
+          it.printf(${col_1}, ${row_1} + 25, id(consola_18), lt_grey, TextAlign::CENTER, "${light_text_1}");
           amnt_f = id(light_brightness_2).state;
           amnt = isnan(amnt_f) ? 0 : uint8_t(amnt_f);
           active_color = amnt == 0 ? bg_charcoal : dk_yellow.gradient(lt_yellow, amnt);
-          it.printf(${col_2}, ${row_1}, id(icon_font_75), active_color, TextAlign::CENTER, "\U000F0335");
+          it.printf(${col_2}, ${row_1} - 20, id(icon_font_60), active_color, TextAlign::CENTER, "\U000F0335");
+          it.printf(${col_2}, ${row_1} + 25, id(consola_18), lt_grey, TextAlign::CENTER, "${light_text_2}");
           amnt_f = id(light_brightness_3).state;
           amnt = isnan(amnt_f) ? 0 : uint8_t(amnt_f);
           active_color = amnt == 0 ? bg_charcoal : dk_yellow.gradient(lt_yellow, amnt);
-          it.printf(${col_3}, ${row_1}, id(icon_font_75), active_color, TextAlign::CENTER, "\U000F0335");
+          it.printf(${col_3}, ${row_1} - 20, id(icon_font_60), active_color, TextAlign::CENTER, "\U000F0335");
+          it.printf(${col_3}, ${row_1} + 25, id(consola_18), lt_grey, TextAlign::CENTER, "${light_text_3}");
           amnt_f = id(light_brightness_4).state;
           amnt = isnan(amnt_f) ? 0 : uint8_t(amnt_f);
           active_color = amnt == 0 ? bg_charcoal : dk_yellow.gradient(lt_yellow, amnt);
-          it.printf(${col_1}, ${row_2}, id(icon_font_75), active_color, TextAlign::CENTER, "\U000F0335");
+          it.printf(${col_1}, ${row_2} - 20, id(icon_font_60), active_color, TextAlign::CENTER, "\U000F0335");
+          it.printf(${col_1}, ${row_2} + 25, id(consola_18), lt_grey, TextAlign::CENTER, "${light_text_4}");
           amnt_f = id(light_brightness_5).state;
           amnt = isnan(amnt_f) ? 0 : uint8_t(amnt_f);
           active_color = amnt == 0 ? bg_charcoal : dk_yellow.gradient(lt_yellow, amnt);
-          it.printf(${col_2}, ${row_2}, id(icon_font_75), active_color, TextAlign::CENTER, "\U000F0335");
-          it.printf(${col_3}, ${row_2}, id(icon_font_75), bg_charcoal, TextAlign::CENTER, "\U000F0335");
+          it.printf(${col_2}, ${row_2} - 20, id(icon_font_60), active_color, TextAlign::CENTER, "\U000F0335");
+          it.printf(${col_2}, ${row_2} + 25, id(consola_18), lt_grey, TextAlign::CENTER, "${light_text_5}");
+          active_color = id(light_state_6).state == "on" ? lt_yellow : bg_charcoal;
+          it.printf(${col_3}, ${row_2} - 20, id(icon_font_60), active_color, TextAlign::CENTER, "\U000F0335");
+          it.printf(${col_3}, ${row_2} + 25, id(consola_18), lt_grey, TextAlign::CENTER, "${light_text_6}");
 
       - id: media_page ##### media player page #####
         lambda: |-
@@ -2668,14 +2689,16 @@ binary_sensor:
     x_max: 315
     y_min: 145
     y_max: 240
-          #### make sure that the following 4 lines are uncommented by removing the prefixed '#' ###
-    # on_click:
-      # min_length: 10ms
-      # max_length: 500ms
-      # then:
-      #### add your action here - make sure to uncomment the following  line by removing the prefixed '#' and keep these below your action #####
-
-        # - component.update: s3_box_lcd
+    on_click:
+      min_length: 10ms
+      max_length: 500ms
+      then:
+        # light 6 supports only toggle
+        - homeassistant.service:
+            service: light.toggle
+            data:
+              entity_id: light.${light_device_6}
+        - component.update: s3_box_lcd
 
 ##### media player #####
   - platform: touchscreen
