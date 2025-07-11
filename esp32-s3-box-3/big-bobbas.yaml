@@ -67,26 +67,41 @@ substitutions:
   page_header: |-
           it.fill(id(black));
           if(id(api_connection) == true) {
-            it.printf(10, 5, id(icon_font_30), blue, "\U000F07D0");
+            it.printf(5, 5, id(icon_font_30), blue, "\U000F07D0");
           } else {
-            it.printf(10, 5, id(icon_font_30), red, "\U000F087B");
+            it.printf(5, 5, id(icon_font_30), red, "\U000F087B");
           }
           if(id(wifi_connection) == true) {
-            it.printf(50, 5, id(icon_font_30), blue, "\U000F16BD");
+            it.printf(40, 5, id(icon_font_30), blue, "\U000F16BD");
           } else {
-            it.printf(50, 5, id(icon_font_30), red, "\U000F16BC");
+            it.printf(40, 5, id(icon_font_30), red, "\U000F16BC");
           }
           if(id(time_remaining_0).state == "-:--:--"){
-            it.printf(90, 5, id(icon_font_30), blue, "\U000F0150");
+            it.printf(75, 5, id(icon_font_30), blue, "\U000F0150");
           } else if(id(time_remaining_0).state == "0:00:00"){
-            it.printf(90, 5, id(icon_font_30), red, "\U000F0150");
+            it.printf(75, 5, id(icon_font_30), red, "\U000F0150");
           } else {
-            it.printf(90, 5, id(icon_font_30), lime, "\U000F0150");
+            it.printf(75, 5, id(icon_font_30), lime, "\U000F0150");
           }
           if(id(mute_switch).state) {
-            it.printf(130, 5, id(icon_font_30), red, "\U000F036D");
+            it.printf(110, 5, id(icon_font_30), red, "\U000F036D");
           } else {
-            it.printf(130, 5, id(icon_font_30), blue, "\U000F036C");
+            it.printf(110, 5, id(icon_font_30), blue, "\U000F036C");
+          }
+          if(id(media_mute).state) {
+            it.printf(145, 5, id(icon_font_30), red, "\U000F0581");
+          } else {
+            const char * icon;
+            if(id(speaker_volume).state == 0) {
+              icon = "\U000F075F";
+            } else if (id(speaker_volume).state <= 3) {
+              icon = "\U000F057F";
+            } else if (id(speaker_volume).state <= 6) {
+              icon = "\U000F0580";
+            } else {
+              icon = "\U000F057E";
+            }
+            it.printf(145, 5, id(icon_font_30), blue, icon);
           }
 
           if(id(time_display_format).state == "24 Hr") {
@@ -293,6 +308,11 @@ script:
               - lambda: return id(global_is_assisting) == false;
               - not:
                 - voice_assistant.is_running
+              # Don't try to start monitoring if we're already capturing audio.
+              # TODO: we're silently discarding the voice monitoring start event here. Would
+              # probably be better to log a warning.
+              - not:
+                - microphone.is_capturing
           then:
             - if:
                 condition:
@@ -307,7 +327,8 @@ script:
                 then:
                   - lambda: id(va).set_use_wake_word(false);
                   - delay: 200ms
-                  - micro_wake_word.start
+                  - logger.log: "start_voice_assistant: mww.start"
+                  - micro_wake_word.start:
 
   - id: stop_voice_assistant
     then:
@@ -327,7 +348,7 @@ script:
   - id: set_volume
     then:
       - media_player.volume_set:
-          volume: !lambda return 0.5 + id(speaker_volume) * 0.05 ;
+          volume: !lambda return 0.5 + id(speaker_volume).state * 0.05 ;
 
   - id: saver_enabled
     then:
@@ -478,14 +499,6 @@ globals:
     type: bool
     restore_value: no
     initial_value: "false"
-  - id: mute_value
-    type: bool
-    restore_value: no
-    initial_value: "false"
-  - id: speaker_volume
-    type: int
-    restore_value: no
-    initial_value: "5"
   - id: media_state
     type: bool
     restore_value: no
@@ -515,7 +528,7 @@ globals:
 number:
   - id: s_saver_delay
     platform: template
-    name: "Scr/save delay"
+    name: "Idle delay"
     icon: 'mdi:sleep'
     entity_category: config
     unit_of_measurement: 'secs'
@@ -549,7 +562,7 @@ number:
 
   - id: s_saver_brightness
     platform: template
-    name: "Scr/save Brightness"
+    name: "Idle brightness"
     icon: 'mdi:sleep'
     entity_category: config
     unit_of_measurement: '%'
@@ -566,7 +579,7 @@ number:
 
   - id: s_default_brightness
     platform: template
-    name: "Default Brightness"
+    name: "Screen brightness"
     icon: 'mdi:monitor'
     entity_category: config
     unit_of_measurement: '%'
@@ -579,6 +592,23 @@ number:
     on_value:
       - component.update: s_default_brightness
       - script.execute: saver_enabled
+      - component.update: s3_box_lcd
+
+  # TODO: media player volume already exists, unify the two
+  - id: speaker_volume
+    platform: template
+    name: "Volume"
+    icon: "mdi:volume-high"
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    initial_value: 5
+    step: 1
+    min_value: 0
+    max_value: 10
+    on_value:
+      - component.update: speaker_volume
+      - script.execute: set_volume
       - component.update: s3_box_lcd
 
 button:
@@ -634,11 +664,13 @@ switch:
       - component.update: s3_box_lcd
       - component.update: s3_box_lcd
     on_turn_off:
+      - logger.log: "mute_switch off: start va"
       - script.execute: start_voice_assistant
       - component.update: s3_box_lcd
 
   - platform: template
     id: media_mute
+    icon: 'mdi:volume-off'
     optimistic: true
     on_turn_on:
       media_player.volume_set:
@@ -651,7 +683,7 @@ switch:
 
   - platform: template
     id: s_saver
-    name: Scr/save enable
+    name: Idle enable
     icon: mdi:sleep
     optimistic: true
     restore_mode: RESTORE_DEFAULT_OFF
@@ -683,6 +715,7 @@ switch:
       # Stop playing the alarm
       - media_player.stop:
           announcement: true
+      - logger.log: "timer_ringing off: start va"
       - script.execute: start_voice_assistant
     on_turn_on:
       - lambda: id(va).set_use_wake_word(false);
@@ -722,7 +755,7 @@ switch:
 
   - platform: template
     id: ext_media_mute
-    icon: 'mdi:volume-off'
+    # Specifying no name implies internal
     optimistic: true
     restore_mode: RESTORE_DEFAULT_OFF
     entity_category: config
@@ -1035,12 +1068,16 @@ media_player:
               media_player.is_playing:
             then:
               - script.execute: stop_voice_assistant
+        # The following results in start_voice_assistant being called every
+        # time there is a volume change. If the volume is changed when starting
+        # a voice command, we end up with mww and va running simultaneously.
         - if:
             condition:
               or:
                 - media_player.is_idle
                 - media_player.is_paused
             then:
+              - logger.log: "media_player state: start va"
               - script.execute: start_voice_assistant
         - if:
             condition:
@@ -1154,7 +1191,7 @@ voice_assistant:
                     entity_id: media_player.${external_media_player}
                     media_content_id: '${home_assistant_host}/local/sounds/awake.mp3'
                     media_content_type: music
-    - voice_assistant.start
+    - voice_assistant.start:
   on_start:
     if:
       condition:
@@ -1188,6 +1225,9 @@ voice_assistant:
     - if:
         condition:
           and:
+            # TODO: ducking would be a better option here I think. Apparently
+            # tts_end is for the end of computation and the beginning of
+            # announce?
             - switch.is_on: mute_response_switch
             - switch.is_off: media_mute
             - switch.is_off: ext_media_mute
@@ -1229,38 +1269,18 @@ voice_assistant:
     - lambda: id(global_is_assisting) = false;
 
   on_idle:
+    - lambda: id(global_is_assisting) = false;
+    # Restart wake word detection
+    - logger.log: "va idle: restart va"
+    - script.execute: start_voice_assistant
     - display.page.show: idle_page
     - component.update: s3_box_lcd
 
   on_end:
-    - wait_until:
-        not:
-          voice_assistant.is_running:
     - mixer_speaker.apply_ducking:
         id: media_mixing_input
         decibel_reduction: 0
         duration: 0.0s
-    - lambda: id(global_is_assisting) = false;
-    - if:
-        condition:
-          and:
-            - switch.is_off: mute_switch
-            - lambda: return id(wake_word_engine_location).state == "On device";
-        then:
-          - voice_assistant.stop
-          - micro_wake_word.start
-
-        else:
-          if:
-            condition:
-              - switch.is_off: mute_switch
-            then:
-              - lambda: id(va).set_use_wake_word(false);
-              - voice_assistant.stop:
-              - delay: 100ms
-              - lambda: id(va).set_use_wake_word(true);
-              - delay: 100ms
-              - voice_assistant.start
     - if:
         condition:
           and:
@@ -1388,6 +1408,7 @@ font:
     glyphs:
       '${font_glyphs}'
 
+  # See https://github.com/Templarian/MaterialDesign-Webfont/blob/master/scss/_variables.scss for codes
   - file: "https://github.com/BigBobbas/ESP32-S3-Box3-Custom-ESPHome/raw/main/fonts/materialdesignicons-webfont.ttf"
     id: icon_font_30
     size: 30
@@ -1425,14 +1446,17 @@ font:
       - "\U000F050F"#temp sensor
       - "\U000F0521"#toggle on
       - "\U000F0565"#arming
-      - "\U000F057E"#speaker on
-      - "\U000F0581"#speaker off
+      - "\U000F057E"#volume-high
+      - "\U000F057F"#volume-low
+      - "\U000F0580"#volume-medium
+      - "\U000F0581"#volume-off (volume-high plus strike-through)
       - "\U000F05CB"#voice
       - "\U000F068A"#alarm home
       - "\U000F06E8"#light bulb illuminated
       - "\U000F075A"#music
       - "\U000F075D"#vol plus
       - "\U000F075E"#vol minus
+      - "\U000F075F"#volume-mute (speaker with x)
       - "\U000F0769"#ceiling
       - "\U000F07D0"#api connected
       - "\U000F07F4"#tv
@@ -2147,7 +2171,7 @@ binary_sensor:
       - settings_page
     id: status_bar_1
     x_min: 5
-    x_max: 45
+    x_max: 39
     y_min: 0
     y_max: 40
           #### make sure that the following 4 lines are uncommented by removing the prefixed '#' ###
@@ -2170,8 +2194,8 @@ binary_sensor:
       - settings_page
     id: status_bar_2
     internal: true
-    x_min: 45
-    x_max: 85
+    x_min: 41
+    x_max: 74
     y_min: 0
     y_max: 40
     on_click:
@@ -2194,8 +2218,8 @@ binary_sensor:
       - settings_page
     id: status_bar_3
     internal: true
-    x_min: 85
-    x_max: 125
+    x_min: 76
+    x_max: 109
     y_min: 0
     y_max: 40
     on_click:
@@ -2224,8 +2248,8 @@ binary_sensor:
       - settings_page
     id: status_bar_4
     internal: true
-    x_min: 125
-    x_max: 165
+    x_min: 111
+    x_max: 144
     y_min: 0
     y_max: 40
     on_click:
@@ -2245,10 +2269,33 @@ binary_sensor:
       - ext_media_page
       - scenes_page
       - settings_page
-    name: status_bar_5
+    id: status_bar_5
     internal: true
-    x_min: 165
-    x_max: 205
+    x_min: 146
+    x_max: 179
+    y_min: 0
+    y_max: 40
+    on_click:
+      min_length: 10ms
+      max_length: 500ms
+      then:
+        - switch.toggle: media_mute
+        - component.update: s3_box_lcd
+
+  - platform: touchscreen
+    pages:
+      - idle_page
+      - info_page
+      - lights_page
+      - template_page
+      - media_page
+      - ext_media_page
+      - scenes_page
+      - settings_page
+    name: status_bar_6
+    internal: true
+    x_min: 181
+    x_max: 214
     y_min: 0
     y_max: 40
     #on_click:
@@ -2329,15 +2376,19 @@ binary_sensor:
     y_max: 240
     on_press:
       then:
-        - switch.turn_on: mute_switch
+        # Circumvent wake word and explicitly enable assistant.
         - lambda: id(va).set_use_wake_word(false);
-        - micro_wake_word.stop
+        - micro_wake_word.stop:
+        - lambda: id(global_is_assisting) = true;
+        # Mute must be turned on AFTER global_is_assisting or we reactivate
+        # micro_wake_word
+        - switch.turn_on: media_mute
         - delay: 100ms
-        - voice_assistant.start
+        - voice_assistant.start:
         - wait_until:
             not:
               - voice_assistant.is_running
-        - voice_assistant.stop
+        - voice_assistant.stop:
     on_release:
       then:
         # TODO: if the voice test button is only pressed quickly instead of held down,
@@ -2346,7 +2397,7 @@ binary_sensor:
         # then VA tears down the mic once it detects an end to voice. This appears to cause
         # a problem in the i2c_audio component when VA attempts to play the response and
         # the ring buffer appears to get corrupted.
-        - switch.turn_off: mute_switch
+        - switch.turn_off: media_mute
         - component.update: s3_box_lcd
 
   - platform: touchscreen
@@ -2715,8 +2766,8 @@ binary_sensor:
       then:
         - logger.log: "Volume Minus pressed"
         - lambda: |-
-            if (id(speaker_volume) > 0) {
-              id(speaker_volume) -= 1;
+            if (id(speaker_volume).state > 0) {
+              id(speaker_volume).state -= 1;
             }
         - component.update: s3_box_lcd
         - script.execute: set_volume
@@ -2735,8 +2786,8 @@ binary_sensor:
       then:
         - logger.log: "Volume Plus pressed"
         - lambda: |-
-            if (id(speaker_volume) < 10) {
-              id(speaker_volume) += 1;
+            if (id(speaker_volume).state < 10) {
+              id(speaker_volume).state += 1;
             }
         - component.update: s3_box_lcd
         - script.execute: set_volume
@@ -2757,9 +2808,9 @@ binary_sensor:
             condition:
               media_player.is_idle:
             then:
-              - media_player.play
+              - media_player.play:
             else:
-              - media_player.stop
+              - media_player.stop:
         - logger.log: "Play Paused pressed"
 
   - platform: touchscreen
