@@ -6,7 +6,7 @@ substitutions:
   name: esp32-s3-box-3
   friendly_name: ESP32-S3-Box-3
 
-  external_media_player: chromecast_remote  ##change this to your external media player enity_id: do not include media_player.
+  external_media_player: living_room_media  ##change this to your external media player enity_id: do not include media_player.
   home_assistant_host: http://potato6300.localdomain:8123 ##change to the full url or IP of your HA server including port
 
   climate_device_1: bedroom
@@ -776,16 +776,17 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
     entity_category: config
     on_turn_on:
-      then:
-        - homeassistant.service:
-            service: media_player.volume_mute
-            data:
-              entity_id: media_player.${external_media_player}
+      - homeassistant.service:
+          service: media_player.volume_mute
+          data:
+            entity_id: media_player.${external_media_player}
+            is_volume_muted: "true"
     on_turn_off:
       - homeassistant.service:
           service: media_player.volume_mute
           data:
             entity_id: media_player.${external_media_player}
+            is_volume_muted: "false"
 
 output:
   - platform: ledc
@@ -885,6 +886,20 @@ sensor:
     on_value:
       component.update: s3_box_lcd
 
+  - platform: homeassistant
+    entity_id: media_player.${external_media_player}
+    id: ha_media_volume
+    attribute: volume_level
+    on_value:
+      component.update: s3_box_lcd
+  # See https://github.com/home-assistant/core/blob/dev/homeassistant/components/media_player/const.py
+  - platform: homeassistant
+    entity_id: media_player.${external_media_player}
+    id: ha_media_caps
+    attribute: supported_features
+    on_value:
+      component.update: s3_box_lcd
+
 text_sensor:
   - id: text_request
     platform: template
@@ -961,8 +976,29 @@ text_sensor:
 
   - platform: homeassistant
     entity_id: media_player.${external_media_player}
+    id: ha_media_source
+    attribute: source
+    on_value:
+      component.update: s3_box_lcd
+
+  - platform: homeassistant
+    entity_id: media_player.${external_media_player}
     id: ha_media_title
-    attribute: media_content_id
+    attribute: media_title
+    on_value:
+      component.update: s3_box_lcd
+
+  - platform: homeassistant
+    entity_id: media_player.${external_media_player}
+    id: ha_media_artist
+    attribute: media_artist
+    on_value:
+      component.update: s3_box_lcd
+
+  - platform: homeassistant
+    entity_id: media_player.${external_media_player}
+    id: ha_media_app_name
+    attribute: app_name
     on_value:
       component.update: s3_box_lcd
 
@@ -1452,6 +1488,7 @@ font:
       - "\U000F03E4"#pause
       - "\U000F040A"#play
       - "\U000F040E"#play/pause
+      - "\U000F0425"#power
       - "\U000F0493"#settings cog
       - "\U000F04AD"#next track
       - "\U000F04AE"#previous track
@@ -1559,6 +1596,8 @@ color:
     hex: 'ffffff'
   - id: purple
     hex: '8e44ad'
+  - id: grey
+    hex: '808080'
   - id: lt_blue
     hex: 'a9cce3'
   - id: lt_grey
@@ -1707,17 +1746,54 @@ display:
       - id: ext_media_page ##### media player page #####
         lambda: |-
           ${page_header}
-          it.printf(${center_x}, 60, id(consola_22), lime, TextAlign::CENTER, id(ha_media_status).state.c_str());
-          it.printf(${col_1}, 130, id(icon_font_75), blue, TextAlign::CENTER, "\U000F04AE");
-          it.printf(${col_2}, 130, id(icon_font_75), blue, TextAlign::CENTER, "\U000F040E");
-          it.printf(${col_3}, 130, id(icon_font_75), blue, TextAlign::CENTER, "\U000F04AD");
-          if(id(ext_media_mute).state) {
-                  it.printf(${col_2}, 200, id(icon_font_75), red, TextAlign::CENTER, "\U000F0581");
+          if (id(ha_media_status).state == "off") {
+            it.printf(${center_x} - 40, 50, id(consola_22), lime, TextAlign::CENTER, id(ha_media_status).state.c_str());
           } else {
-                  it.printf(${col_2}, 200, id(icon_font_75), lime, TextAlign::CENTER, "\U000F057E");
+            it.printf(${center_x} - 40, 50, id(consola_22), lime, TextAlign::CENTER, id(ha_media_source).state.c_str());
+            if (id(ha_media_source).state == "Chromecast") {
+              it.printf(${center_x} - 40, 75, id(consola_22), lime, TextAlign::CENTER, "%s", id(ha_media_app_name).state.c_str());
+            } else if (id(ha_media_source).state == "HEOS Music") {
+              it.printf(${center_x} - 40, 75, id(consola_22), lime, TextAlign::CENTER, "%s", id(ha_media_artist).state.c_str());
+            }
+            if (id(ha_media_source).state != id(ha_media_title).state) {
+              it.printf(${center_x} - 40, 100, id(consola_22), lime, TextAlign::CENTER, "%s", id(ha_media_title).state.c_str());
+            }
           }
-          it.printf(${col_1}, 200, id(icon_font_75), blue, TextAlign::CENTER, "\U000F075E");
-          it.printf(${col_3}, 200, id(icon_font_75), blue, TextAlign::CENTER, "\U000F075D");
+          it.printf(${col_3} - 10, 70, id(icon_font_60), blue, TextAlign::CENTER, "\U000F0425");
+          Color active_color;
+          uint32_t caps = id(ha_media_caps).state;
+          if (id(ha_media_status).state == "playing") {
+            // remove play
+            caps &= ~16384;
+          } else if (id(ha_media_status).state == "paused") {
+            // remove pause
+            caps &= ~1;
+          }
+          // TODO: not clear if these flags exist in esphome
+          active_color = caps & 16 ? blue : grey; // prev track
+          it.printf(${col_1} + 10, 135, id(icon_font_60), active_color, TextAlign::CENTER, "\U000F04AE");
+          if ((caps & (16384 | 1)) == (16384 | 1)) {
+            // play and pause
+            it.printf(${col_2}, 135, id(icon_font_60), blue, TextAlign::CENTER, "\U000F040E");
+          } else if (caps & 16384) {
+            // play only
+            it.printf(${col_2}, 135, id(icon_font_60), blue, TextAlign::CENTER, "\U000F040A");
+          } else if (caps & 1) {
+            // pause only
+            it.printf(${col_2}, 135, id(icon_font_60), blue, TextAlign::CENTER, "\U000F03E4");
+          } else {
+            // neither play nor pause
+            it.printf(${col_2}, 135, id(icon_font_60), grey, TextAlign::CENTER, "\U000F040E");
+          }
+          active_color = caps & 32 ? blue : grey; // next track
+          it.printf(${col_3} - 10, 135, id(icon_font_60), active_color, TextAlign::CENTER, "\U000F04AD");
+          if(id(ha_media_mute).state) {
+                  it.printf(${col_2}, 200, id(icon_font_60), red, TextAlign::CENTER, "\U000F0581");
+          } else {
+                  it.printf(${col_2}, 200, id(icon_font_60), lime, TextAlign::CENTER, "\U000F057E");
+          }
+          it.printf(${col_1} + 10, 200, id(icon_font_60), blue, TextAlign::CENTER, "\U000F075E");
+          it.printf(${col_3} - 10, 200, id(icon_font_60), blue, TextAlign::CENTER, "\U000F075D");
 
       - id: scenes_page ##### scenes page #####
         lambda: |-
@@ -2167,7 +2243,7 @@ binary_sensor:
                 - display.page.show: saver_page
                 - component.update: s3_box_lcd
 
-# #######     red circle home button   #####################
+###### red circle home button #######
   - platform: gt911
     id: home_button
     index: 0
@@ -2182,7 +2258,15 @@ binary_sensor:
           - display.page.show: idle_page
           - component.update: s3_box_lcd
 
-##### satus bar buttons #####
+###### Home assistant booleans #######
+  - platform: homeassistant
+    entity_id: media_player.${external_media_player}
+    id: ha_media_mute
+    attribute: is_volume_muted
+    on_state:
+      component.update: s3_box_lcd
+
+##### status bar buttons #####
   - platform: touchscreen
     pages:
       - idle_page
@@ -2851,15 +2935,16 @@ binary_sensor:
       then:
         - switch.toggle: media_mute
         - component.update: s3_box_lcd
+
 #### external media ####
   - platform: touchscreen
     page_id: ext_media_page
     id: ext_prev_track
     internal: true
-    x_min: 5
-    x_max: 105
-    y_min: 90
-    y_max: 170
+    x_min: 10
+    x_max: 110
+    y_min: 125
+    y_max: 190
     on_click:
       min_length: 0ms
       max_length: 500ms
@@ -2875,10 +2960,10 @@ binary_sensor:
     page_id: ext_media_page
     id: ext_next_track
     internal: true
-    x_min: 215
-    x_max: 315
-    y_min: 90
-    y_max: 170
+    x_min: 205
+    x_max: 310
+    y_min: 125
+    y_max: 190
     on_click:
       min_length: 0ms
       max_length: 500ms
@@ -2894,16 +2979,16 @@ binary_sensor:
     page_id: ext_media_page
     name: Play Pause
     internal: true
-    x_min: 110
-    x_max: 210
-    y_min: 90
-    y_max: 170
+    x_min: 115
+    x_max: 205
+    y_min: 125
+    y_max: 190
     on_click:
       min_length: 0ms
       max_length: 500ms
       then:
         - homeassistant.service:
-            service: media_player.media_pause
+            service: media_player.media_play_pause
             data:
               entity_id: media_player.${external_media_player}
         - component.update: s3_box_lcd
@@ -2913,10 +2998,10 @@ binary_sensor:
     page_id: ext_media_page
     name: Mute Media
     internal: true
-    x_min: 110
-    x_max: 210
-    y_min: 180
-    y_max: 260
+    x_min: 115
+    x_max: 205
+    y_min: 195
+    y_max: 240
     on_click:
       min_length: 0ms
       max_length: 500ms
@@ -2930,8 +3015,8 @@ binary_sensor:
     internal: true
     x_min: 5
     x_max: 105
-    y_min: 180
-    y_max: 260
+    y_min: 195
+    y_max: 240
     on_click:
       min_length: 0ms
       max_length: 500ms
@@ -2941,7 +3026,6 @@ binary_sensor:
             data:
               entity_id: media_player.${external_media_player}
         - component.update: s3_box_lcd
-        - script.execute: set_volume
 
   - platform: touchscreen
     page_id: ext_media_page
@@ -2949,8 +3033,8 @@ binary_sensor:
     internal: true
     x_min: 215
     x_max: 315
-    y_min: 180
-    y_max: 260
+    y_min: 195
+    y_max: 240
     on_click:
       min_length: 0ms
       max_length: 500ms
@@ -2960,7 +3044,6 @@ binary_sensor:
             data:
               entity_id: media_player.${external_media_player}
         - component.update: s3_box_lcd
-        - script.execute: set_volume
 
 ##### scenes page ####
   - platform: touchscreen
