@@ -332,14 +332,14 @@ script:
           then:
             - if:
                 condition:
-                  lambda: return id(wake_word_engine_location).state == "In Home Assistant";
+                  lambda: return id(wake_word_engine_location).current_option() == "In Home Assistant";
                 then:
                   - lambda: id(va).set_use_wake_word(true);
                   - delay: 200ms
                   - voice_assistant.start_continuous:
             - if:
                 condition:
-                  lambda: return id(wake_word_engine_location).state == "On device";
+                  lambda: return id(wake_word_engine_location).current_option() == "On device";
                 then:
                   - lambda: id(va).set_use_wake_word(false);
                   - delay: 200ms
@@ -350,13 +350,13 @@ script:
     then:
       - if:
           condition:
-            lambda: return id(wake_word_engine_location).state == "In Home Assistant";
+            lambda: return id(wake_word_engine_location).current_option() == "In Home Assistant";
           then:
             - lambda: id(va).set_use_wake_word(false);
             - voice_assistant.stop:
       - if:
           condition:
-            lambda: return id(wake_word_engine_location).state == "On device";
+            lambda: return id(wake_word_engine_location).current_option() == "On device";
           then:
             - voice_assistant.stop:
             - micro_wake_word.stop:
