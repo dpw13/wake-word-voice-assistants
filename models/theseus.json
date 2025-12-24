@@ -2,15 +2,15 @@
   "type": "micro",
   "wake_word": "Theseus",
   "author": "Dane Wagner",
-  "website": "https://www.kevinahrendt.com/",
+  "website": "https://wmwx.org/",
   "version": 2,
   "model": "theseus.tflite",
   "trained_languages": ["en"],
   "micro": {
-    "probability_cutoff": 0.4,
+    "probability_cutoff": 0.7,
     "feature_step_size": 10,
     "sliding_window_size": 5,
-    "tensor_arena_size": 26049,
+    "tensor_arena_size": 30225,
     "minimum_esphome_version": "2024.7.0"
   }
 }
