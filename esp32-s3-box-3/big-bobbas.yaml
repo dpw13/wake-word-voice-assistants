@@ -150,13 +150,6 @@ esphome:
       - component.update: s3_box_lcd
       - script.execute: saver_enabled
       - lambda: id(time_remaining_0).publish_state ("-:--:--");
-      - if:
-          condition:
-            switch.is_on: output_audio
-          then:
-            media_player.volume_set:
-              id: speaker_media_player
-              volume: 0
   project:
     name: "BigBobbas.s3box"
     version: "2024.09.02"
@@ -704,22 +697,6 @@ switch:
     icon: 'mdi:chat'
 
   - platform: template
-    name: Output audio externally
-    id: output_audio
-    icon: 'mdi:volume-off'
-    optimistic: true
-    restore_mode: RESTORE_DEFAULT_OFF
-    entity_category: config
-    on_turn_on:
-      media_player.volume_set:
-        id: speaker_media_player
-        volume: 0
-    on_turn_off:
-      media_player.volume_set:
-        id: speaker_media_player
-        volume: 1.0
-
-  - platform: template
     name: Mute
     id: mute_switch
     icon: "mdi:microphone-off"
@@ -1054,13 +1031,6 @@ text_sensor:
       component.update: s3_box_lcd
 
   - platform: homeassistant
-    name: "Alarm Status"
-    entity_id: alarm_control_panel.alarmo
-    id: alarm_status
-    on_value:
-      - component.update: s3_box_lcd
-
-  - platform: homeassistant
     entity_id: light.${light_device_6}
     id: light_state_6
     on_value:
@@ -1197,6 +1167,8 @@ media_player:
                 - speaker.is_stopped:
                     id: i2s_audio_speaker
             - logger.log: "media_player idle, va restart"
+            - display.page.show: idle_page
+            - component.update: s3_box_lcd
             - script.execute: start_voice_assistant
 
 micro_wake_word:
@@ -1210,7 +1182,6 @@ micro_wake_word:
     - delay: 50ms
     - if:
         condition:
-          - switch.is_off: output_audio
           - switch.is_on: wake_sound
         then:
           - media_player.speaker.play_on_device_media_file:
@@ -1220,18 +1191,6 @@ micro_wake_word:
               not:
                 - media_player.is_announcing:
           - delay: 150ms
-        else:
-          if:
-            condition:
-              - switch.is_on: output_audio
-              - switch.is_on: wake_sound
-            then:
-              - homeassistant.service:
-                  service: media_player.play_media
-                  data:
-                    entity_id: media_player.${external_media_player}
-                    media_content_id: '${home_assistant_host}/local/sounds/awake.mp3'
-                    media_content_type: music
     - display.page.show: listening_page
     - component.update: s3_box_lcd
     - delay: 100ms
@@ -1247,45 +1206,6 @@ voice_assistant:
   noise_suppression_level: 2
   auto_gain: 31dBFS
   volume_multiplier: 2.0
-  on_wake_word_detected:
-    - lambda: id(global_is_assisting) = true;
-    - voice_assistant.stop:
-    - lambda: id(va).set_use_wake_word(false);
-    - if:
-        condition:
-          - switch.is_off: output_audio
-          - switch.is_on: wake_sound
-        then:
-          # - voice_assistant.stop:
-          # - delay: 150ms
-          # - if:
-              # condition:
-                # not:
-                  # microphone.is_capturing:
-              # then:
-          - media_player.speaker.play_on_device_media_file:
-              media_file: wake_sound_file
-              announcement: true
-          - wait_until:
-              not:
-                - media_player.is_announcing:
-          - delay: 150ms
-          - lambda: id(va).set_use_wake_word(false);
-          - display.page.show: listening_page
-          - component.update: s3_box_lcd
-        else:
-          if:
-            condition:
-              - switch.is_on: wake_sound
-              - switch.is_on: output_audio
-            then:
-              - homeassistant.service:
-                  service: media_player.play_media
-                  data:
-                    entity_id: media_player.${external_media_player}
-                    media_content_id: '${home_assistant_host}/local/sounds/awake.mp3'
-                    media_content_type: music
-    - voice_assistant.start
   on_start:
     - logger.log: "va on_start"
     - if:
@@ -1334,20 +1254,6 @@ voice_assistant:
           - switch.turn_on: media_mute
           - switch.turn_on: ext_media_mute
     - display.page.show: replying_page
-    - component.update: s3_box_lcd
-    - if:
-        condition:
-          - switch.is_on: output_audio
-        then:
-          - homeassistant.service:
-              service: media_player.play_media
-              data:
-                entity_id: media_player.${external_media_player}
-                media_content_id: !lambda 'return x;'
-                media_content_type: music
-                announce: "false"
-    - delay: 3s
-    - display.page.show: idle_page
     - component.update: s3_box_lcd
   # Only used when speaker is explicitly indicated
   #on_tts_stream_start:
@@ -1416,23 +1322,10 @@ voice_assistant:
         id(time_remaining_0).publish_state(str_sprintf("%d:%02d:%02d", hours, minutes, seconds));
     - component.update: s3_box_lcd
   on_timer_finished:
-    if:
-      condition:
-        - switch.is_on: output_audio
-      then:
-        - switch.turn_on: timer_ringing
-        - script.execute: timer_started_external
-        - display.page.show: timer_finished_page
-        - component.update: s3_box_lcd
-      else:
-        - if:
-            condition:
-              - switch.is_off: output_audio
-            then:
-              - switch.turn_on: timer_ringing
-              # - script.execute: timer_started
-              - display.page.show: timer_finished_page
-              - component.update: s3_box_lcd
+    - switch.turn_on: timer_ringing
+    #- script.execute: timer_started
+    - display.page.show: timer_finished_page
+    - component.update: s3_box_lcd
 
 image:
   - file: "https://github.com/dpw13/wake-word-voice-assistants/raw/main/images/error.png"
@@ -1781,23 +1674,7 @@ display:
           it.printf(${col_3}, ${row_2} - 20, id(icon_font_60), active_color, TextAlign::CENTER, "\U000F0335");
           it.printf(${col_3}, ${row_2} + 25, id(consola_18), lt_grey, TextAlign::CENTER, "${light_text_6}");
 
-      - id: media_page ##### media player page #####
-        lambda: |-
-          ${page_header}
-          if(id(media_state) == true) {
-                 it.printf(160, 60, id(consola_22), lime, TextAlign::CENTER, "Playing");
-          } else {
-                 it.printf(160, 60, id(consola_22), lt_blue, TextAlign::CENTER, "Nothing Playing");
-          }
-          it.printf(${col_1}, 130, id(icon_font_75), blue, TextAlign::CENTER, "\U000F075E");
-          it.printf(${col_2}, 130, id(icon_font_75), blue, TextAlign::CENTER, "\U000F040E");
-          it.printf(${col_3}, 130, id(icon_font_75), blue, TextAlign::CENTER, "\U000F075D");
-          if(id(media_mute).state) {
-                  it.printf(${center_x}, 200, id(icon_font_75), red, TextAlign::CENTER, "\U000F0581");
-          } else {
-                  it.printf(${center_x}, 200, id(icon_font_75), lime, TextAlign::CENTER, "\U000F057E");
-          }
-      - id: ext_media_page ##### media player page #####
+      - id: ext_media_page ##### external media player page #####
         lambda: |-
           ${page_header}
           if (id(ha_media_status).state == "off") {
@@ -1993,12 +1870,6 @@ display:
       - id: device_set_page ##### Device settings page #####
         lambda: |-
           ${page_header}
-          it.printf(15, 75, id(consola_22), lt_blue, "Ext media player");
-          if(id(output_audio).state) {
-                 it.printf(255, 60, id(icon_font_60), lime, "\U000F0521");
-          } else {
-                 it.printf(255, 60, id(icon_font_60), dk_blue, "\U000F0A19");
-          }
           it.printf(5, 190, id(icon_font_45), lt_blue, "\U000F0B28");
           it.printf(15, 135, id(consola_22), lt_blue, "Brightness");
           it.printf(238, 148, id(consola_22), lt_blue, TextAlign::CENTER, "%.f", id(s_default_brightness).state);
@@ -2049,157 +1920,6 @@ display:
           it.printf(38, 210, id(consola_22), lt_blue, TextAlign::LEFT, "Signal Strength");
           it.printf(283, 210, id(consola_22), yellow, TextAlign::RIGHT, "%4.f%%", id(wifi_percent).state);
 
-      - id: alarm_page   #### alarm page #####
-        lambda: |-
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(10, 10, id(icon_font_180), red, "\U000F099E");
-          it.printf(40, 200, id(consola_28), red, "Disarmed");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(10, 10, id(icon_font_180), amber, "\U000F0565");
-          it.printf(40, 200, id(consola_28), amber, "Arming");
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(10, 10, id(icon_font_180), green, "\U000F068A");
-          it.printf(60, 200, id(consola_28), green, "Armed");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(10, 10, id(icon_font_180), green, "\U000F099D");
-          it.printf(60, 200, id(consola_28), green, "Armed");
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(10, 10, id(icon_font_180), green, "\U000F1828");
-          it.printf(60, 200, id(consola_28), green, "Armed");
-          }
-          if(id(alarm_status).state == "armed_home") {
-          it.printf(225, 5, id(icon_font_60), green, "\U000F068A");
-          it.printf(233, 60, id(consola_18), lt_blue, "Home");
-          } else {
-          it.printf(225, 5, id(icon_font_60), dk_blue, "\U000F068A");
-          it.printf(233, 60, id(consola_18), lt_blue, "Home");
-          }
-          if(id(alarm_status).state == "armed_away") {
-          it.printf(225, 80, id(icon_font_60), green, "\U000F099D");
-          it.printf(233, 135, id(consola_18), lt_blue, "Away");
-          } else {
-          it.printf(225, 80, id(icon_font_60), dk_blue, "\U000F099D");
-          it.printf(233, 135, id(consola_18), lt_blue, "Away");
-          }
-          if(id(alarm_status).state == "armed_night") {
-          it.printf(225, 155, id(icon_font_60), green, "\U000F1828");
-          it.printf(228, 215, id(consola_18), lt_blue, "Night");
-          } else {
-          it.printf(225, 155, id(icon_font_60), dk_blue, "\U000F1828");
-          it.printf(228, 215, id(consola_18), lt_blue, "Night");
-          }
-      - id: alarm_home_activate_page ##### alarm  home activation page #####
-        lambda: |-
-          auto pin_state = id(current_pin).c_str();
-          it.print(310, 80, id(consola_28), TextAlign::RIGHT, pin_state);
-          // loop for numbers 1 - 9
-          for (int i = 0; i < 3; i++) {
-          for (int j = 0; j < 3; j++) {
-          int number = i * 3 + j + 1;
-          int x_position = 15 + j * 56;  // Ajustement de la position en X
-          int y_position = 15 + i * 56;  // Ajustement de la position en Y
-          it.rectangle(x_position, y_position, 48, 48, lt_blue);  // Taille du rectangle ajustée
-          char num_str[2];
-          snprintf(num_str, sizeof(num_str), "%d", number);
-          it.print(x_position + 24, y_position + 24, id(consola_28), TextAlign::CENTER, num_str);  // Centrage du chiffre
-          }
-           }
-          it.rectangle(71, 183, 48, 48, lt_blue);  // Position et taille du rectangle ajustées
-          it.print(95, 207, id(consola_28), TextAlign::CENTER, "0");  // Centrage du chiffre "0"
-          //it.filled_rectangle(198, 110, 108, 50, green);
-          if(id(alarm_status).state == "disarmed"){
-          it.filled_rectangle(198, 110, 108, 50, red);
-          it.print(255, 135, id(consola_28), white, TextAlign::CENTER, "Arm");
-          } else if(id(alarm_status).state == "armed_home"){
-          it.filled_rectangle(198, 110, 108, 50, green);
-          it.print(255, 135, id(consola_28), white, TextAlign::CENTER, "Disarm");
-          }
-          it.filled_rectangle(198, 170, 108, 50, dk_blue);
-          it.print(255, 195, id(consola_28), white, TextAlign::CENTER, "Clear");
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(255, 30, id(icon_font_45), red, TextAlign::CENTER, "\U000F068A");
-          it.printf(255, 70, id(consola_28), red, TextAlign::CENTER, "Disarmed");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(255, 30, id(icon_font_45), amber, TextAlign::CENTER, "\U000F0565");
-          it.printf(255, 70, id(consola_28), amber, TextAlign::CENTER, "Arming");
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(255, 30, id(icon_font_45), green, TextAlign::CENTER, "\U000F068A");
-          it.printf(255, 70, id(consola_28), green, TextAlign::CENTER, "Armed");
-          }
-      - id: alarm_away_activate_page ##### alarm away activation page #####
-        lambda: |-
-          auto pin_state = id(current_pin).c_str();
-          it.print(310, 80, id(consola_28), TextAlign::RIGHT, pin_state);
-          // loop for numbers 1 - 9
-          for (int i = 0; i < 3; i++) {
-          for (int j = 0; j < 3; j++) {
-          int number = i * 3 + j + 1;
-          int x_position = 15 + j * 56;  // Ajustement de la position en X
-          int y_position = 15 + i * 56;  // Ajustement de la position en Y
-          it.rectangle(x_position, y_position, 48, 48, lt_blue);  // Taille du rectangle ajustée
-          char num_str[2];
-          snprintf(num_str, sizeof(num_str), "%d", number);
-          it.print(x_position + 24, y_position + 24, id(consola_28), TextAlign::CENTER, num_str);  // Centrage du chiffre
-          }
-           }
-          it.rectangle(71, 183, 48, 48, lt_blue);  // Position et taille du rectangle ajustées
-          it.print(95, 207, id(consola_28), TextAlign::CENTER, "0");  // Centrage du chiffre "0"
-          if(id(alarm_status).state == "disarmed"){
-          it.filled_rectangle(198, 110, 108, 50, red);
-          it.print(255, 135, id(consola_28), white, TextAlign::CENTER, "Arm");
-          } else if(id(alarm_status).state == "armed_away"){
-          it.filled_rectangle(198, 110, 108, 50, green);
-          it.print(255, 135, id(consola_28), white, TextAlign::CENTER, "Disarm");
-          }
-          it.filled_rectangle(198, 170, 108, 50, dk_blue);
-          it.print(255, 195, id(consola_28), white, TextAlign::CENTER, "Clear");
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(255, 30, id(icon_font_45), red, TextAlign::CENTER, "\U000F099D");
-          it.printf(255, 70, id(consola_28), red, TextAlign::CENTER, "Disarmed");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(255, 30, id(icon_font_45), amber, TextAlign::CENTER, "\U000F0565");
-          it.printf(255, 70, id(consola_28), amber, TextAlign::CENTER, "Arming");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(255, 30, id(icon_font_45), green, TextAlign::CENTER, "\U000F099D");
-          it.printf(255, 70, id(consola_28), green, TextAlign::CENTER, "Armed");
-          }
-      - id: alarm_night_activate_page ##### alarm night activation page #####
-        lambda: |-
-          auto pin_state = id(current_pin).c_str();
-          it.print(310, 80, id(consola_28), TextAlign::RIGHT, pin_state);
-          // loop for numbers 1 - 9
-          for (int i = 0; i < 3; i++) {
-          for (int j = 0; j < 3; j++) {
-          int number = i * 3 + j + 1;
-          int x_position = 15 + j * 56;  // Ajustement de la position en X
-          int y_position = 15 + i * 56;  // Ajustement de la position en Y
-          it.rectangle(x_position, y_position, 48, 48, lt_blue);  // Taille du rectangle ajustée
-          char num_str[2];
-          snprintf(num_str, sizeof(num_str), "%d", number);
-          it.print(x_position + 24, y_position + 24, id(consola_28), TextAlign::CENTER, num_str);  // Centrage du chiffre
-          }
-           }
-          it.rectangle(71, 183, 48, 48, lt_blue);  // Position et taille du rectangle ajustées
-          it.print(95, 207, id(consola_28), TextAlign::CENTER, "0");  // Centrage du chiffre "0"
-          if(id(alarm_status).state == "disarmed"){
-          it.filled_rectangle(198, 110, 108, 50, red);
-          it.print(255, 135, id(consola_28), white, TextAlign::CENTER, "Arm");
-          } else if(id(alarm_status).state == "armed_night"){
-          it.filled_rectangle(198, 110, 108, 50, green);
-          it.print(255, 135, id(consola_28), white, TextAlign::CENTER, "Disarm");
-          }
-          it.filled_rectangle(198, 170, 108, 50, dk_blue);
-          it.print(255, 195, id(consola_28), white, TextAlign::CENTER, "Clear");
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(255, 30, id(icon_font_45), red, TextAlign::CENTER, "\U000F1828");
-          it.printf(255, 70, id(consola_28), red, TextAlign::CENTER, "Disarmed");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(255, 30, id(icon_font_45), amber, TextAlign::CENTER, "\U000F0565");
-          it.printf(255, 70, id(consola_28), amber, TextAlign::CENTER, "Arming");
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(255, 30, id(icon_font_45), green, TextAlign::CENTER, "\U000F1828");
-          it.printf(255, 70, id(consola_28), green, TextAlign::CENTER, "Armed");
-          }
       - id: notification_page
         lambda: |-
           it.fill(Color::BLACK);
@@ -2327,7 +2047,6 @@ binary_sensor:
       - info_page
       - lights_page
       - template_page
-      - media_page
       - ext_media_page
       - scenes_page
       - settings_page
@@ -2350,7 +2069,6 @@ binary_sensor:
       - info_page
       - lights_page
       - template_page
-      - media_page
       - ext_media_page
       - scenes_page
       - settings_page
@@ -2374,7 +2092,6 @@ binary_sensor:
       - info_page
       - lights_page
       - template_page
-      - media_page
       - ext_media_page
       - scenes_page
       - settings_page
@@ -2404,7 +2121,6 @@ binary_sensor:
       - info_page
       - lights_page
       - template_page
-      - media_page
       - ext_media_page
       - scenes_page
       - settings_page
@@ -2427,7 +2143,6 @@ binary_sensor:
       - info_page
       - lights_page
       - template_page
-      - media_page
       - ext_media_page
       - scenes_page
       - settings_page
@@ -2443,29 +2158,6 @@ binary_sensor:
       then:
         - switch.toggle: media_mute
         - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    pages:
-      - idle_page
-      - info_page
-      - lights_page
-      - template_page
-      - media_page
-      - ext_media_page
-      - scenes_page
-      - settings_page
-    name: status_bar_6
-    internal: true
-    x_min: 181
-    x_max: 214
-    y_min: 0
-    y_max: 40
-    #on_click:
-    #  min_length: 10ms
-    #  max_length: 500ms
-    #  then:
-    #    - display.page.show: alarm_page
-    #    - component.update: s3_box_lcd
 
 ##### settings page ####
   - platform: touchscreen
@@ -2636,15 +2328,8 @@ binary_sensor:
       min_length: 10ms
       max_length: 500ms
       then:
-        if:
-          condition:
-            switch.is_off: output_audio
-          then:
-            - display.page.show: media_page
-            - component.update: s3_box_lcd
-          else:
-            - display.page.show: ext_media_page
-            - component.update: s3_box_lcd
+        - display.page.show: ext_media_page
+        - component.update: s3_box_lcd
 
   - platform: touchscreen
     page_id: idle_page
@@ -2911,83 +2596,6 @@ binary_sensor:
             service: light.toggle
             data:
               entity_id: light.${light_device_6}
-        - component.update: s3_box_lcd
-
-##### media player #####
-  - platform: touchscreen
-    page_id: media_page
-    name: Volume Minus
-    internal: true
-    x_min: 5
-    x_max: 105
-    y_min: 90
-    y_max: 170
-    on_click:
-      min_length: 0ms
-      max_length: 500ms
-      then:
-        - logger.log: "Volume Minus pressed"
-        - lambda: |-
-            if (id(speaker_volume).state > 0) {
-              id(speaker_volume).state -= 1;
-            }
-        - component.update: s3_box_lcd
-        - script.execute: set_volume
-
-  - platform: touchscreen
-    page_id: media_page
-    name: Volume Plus
-    internal: true
-    x_min: 215
-    x_max: 315
-    y_min: 90
-    y_max: 170
-    on_click:
-      min_length: 0ms
-      max_length: 500ms
-      then:
-        - logger.log: "Volume Plus pressed"
-        - lambda: |-
-            if (id(speaker_volume).state < 10) {
-              id(speaker_volume).state += 1;
-            }
-        - component.update: s3_box_lcd
-        - script.execute: set_volume
-
-  - platform: touchscreen
-    page_id: media_page
-    name: Play Pause
-    internal: true
-    x_min: 110
-    x_max: 210
-    y_min: 90
-    y_max: 170
-    on_click:
-      min_length: 0ms
-      max_length: 500ms
-      then:
-        - if:
-            condition:
-              media_player.is_idle:
-            then:
-              - media_player.play:
-            else:
-              - media_player.stop:
-        - logger.log: "Play Paused pressed"
-
-  - platform: touchscreen
-    page_id: media_page
-    name: Mute Media
-    internal: true
-    x_min: 110
-    x_max: 210
-    y_min: 180
-    y_max: 260
-    on_click:
-      min_length: 0ms
-      max_length: 500ms
-      then:
-        - switch.toggle: media_mute
         - component.update: s3_box_lcd
 
 #### external media ####
@@ -3495,19 +3103,6 @@ binary_sensor:
             call.perform();
         - component.update: s3_box_lcd
 
-  - id: ext_media_toggle
-    page_id: device_set_page
-    platform: touchscreen
-    internal: true
-    x_min: 280
-    x_max: 320
-    y_min: 80
-    y_max: 120
-    on_press:
-      then:
-        - switch.toggle: output_audio
-        - component.update: s3_box_lcd
-
   - platform: touchscreen
     page_id: device_set_page
     id: chang_display_format
@@ -3525,287 +3120,4 @@ binary_sensor:
             cycle: true
         - component.update: s3_box_lcd
 
-
-##### alarm panel buttons #####
-  - platform: touchscreen
-    pages:
-      - alarm_away_activate_page
-      - alarm_home_activate_page
-      - alarm_night_activate_page
-    id: alarm_key_1
-    internal: true
-    x_min: 15
-    x_max: 63
-    y_min: 15
-    y_max: 63
-    on_press:
-      - script.execute: increment_digit_1
-      - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    pages:
-      - alarm_away_activate_page
-      - alarm_home_activate_page
-      - alarm_night_activate_page
-    id: alarm_key_2
-    internal: true
-    x_min: 71
-    x_max: 119
-    y_min: 15
-    y_max: 63
-    on_press:
-      - script.execute: increment_digit_2
-      - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    pages:
-      - alarm_away_activate_page
-      - alarm_home_activate_page
-      - alarm_night_activate_page
-    id: alarm_key_3
-    internal: true
-    x_min: 127
-    x_max: 175
-    y_min: 15
-    y_max: 63
-    on_press:
-      - script.execute: increment_digit_3
-      - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    pages:
-      - alarm_away_activate_page
-      - alarm_home_activate_page
-      - alarm_night_activate_page
-    id: alarm_key_4
-    internal: true
-    x_min: 15
-    x_max: 63
-    y_min: 71
-    y_max: 119
-    on_press:
-      - script.execute: increment_digit_4
-      - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    pages:
-      - alarm_away_activate_page
-      - alarm_home_activate_page
-      - alarm_night_activate_page
-    id: alarm_key_5
-    internal: true
-    x_min: 71
-    x_max: 119
-    y_min: 71
-    y_max: 119
-    on_press:
-      - script.execute: increment_digit_5
-      - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    pages:
-      - alarm_away_activate_page
-      - alarm_home_activate_page
-      - alarm_night_activate_page
-    id: alarm_key_6
-    internal: true
-    x_min: 127
-    x_max: 175
-    y_min: 71
-    y_max: 119
-    on_press:
-      - script.execute: increment_digit_6
-      - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    pages:
-      - alarm_away_activate_page
-      - alarm_home_activate_page
-      - alarm_night_activate_page
-    id: alarm_key_7
-    internal: true
-    x_min: 15
-    x_max: 63
-    y_min: 127
-    y_max: 175
-    on_press:
-      - script.execute: increment_digit_7
-      - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    pages:
-      - alarm_away_activate_page
-      - alarm_home_activate_page
-      - alarm_night_activate_page
-    id: alarm_key_8
-    internal: true
-    x_min: 71
-    x_max: 119
-    y_min: 127
-    y_max: 175
-    on_press:
-      - script.execute: increment_digit_8
-      - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    pages:
-      - alarm_away_activate_page
-      - alarm_home_activate_page
-      - alarm_night_activate_page
-    id: alarm_key_9
-    internal: true
-    x_min: 127
-    x_max: 175
-    y_min: 127
-    y_max: 175
-    on_press:
-      - script.execute: increment_digit_9
-      - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    pages:
-      - alarm_away_activate_page
-      - alarm_home_activate_page
-      - alarm_night_activate_page
-    id: alarm_key_0
-    internal: true
-    x_min: 71
-    x_max: 119
-    y_min: 183
-    y_max: 231
-    on_press:
-      - media_player.play_media:
-          media_url: '${home_assistant_host}/local/sounds/key.mp3'
-      - script.execute: increment_digit_0
-      - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    pages:
-      - alarm_away_activate_page
-      - alarm_home_activate_page
-      - alarm_night_activate_page
-    id: clear_pin
-    x_min: 198
-    x_max: 306
-    y_min: 170
-    y_max: 220
-    on_press:
-      then:
-        - lambda: |-
-            id(current_pin) = "";
-        - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    pages:
-      - alarm_away_activate_page
-      - alarm_home_activate_page
-      - alarm_night_activate_page
-    id: alarm_ok
-    x_min: 198
-    x_max: 306
-    y_min: 110
-    y_max: 160
-    on_click:
-      min_length: 0ms
-      max_length: 500ms
-      then:
-        - if:
-            condition:
-              - lambda: |-
-                  return (id(alarm_status).state == "arming" || id(alarm_status).state == "armed_away" || id(alarm_status).state == "armed_home" || id(alarm_status).state == "armed_night");
-            then:
-              - homeassistant.service:
-                  service: alarm_control_panel.alarm_disarm
-                  data:
-                    entity_id: alarm_control_panel.alarmo
-                    code: !lambda return id(current_pin).c_str();
-              - lambda: |-
-                  id(current_pin) = "";
-            else:
-              - if:
-                  condition:
-                    - lambda: |-
-                        return (id(alarm_status).state == "disarmed");
-                    - display.is_displaying_page: alarm_home_activate_page
-                  then:
-                    - homeassistant.service:
-                        service: alarm_control_panel.alarm_arm_home
-                        data:
-                          entity_id: alarm_control_panel.alarmo
-                          code: !lambda return id(current_pin).c_str();
-                    - lambda: |-
-                        id(current_pin) = "";
-                  else:
-                    - if:
-                        condition:
-                          - lambda: |-
-                              return (id(alarm_status).state == "disarmed");
-
-                          - display.is_displaying_page: alarm_away_activate_page
-                        then:
-                          - homeassistant.service:
-                              service: alarm_control_panel.alarm_arm_away
-                              data:
-                                entity_id: alarm_control_panel.alarmo
-                                code: !lambda return id(current_pin).c_str();
-                          - lambda: |-
-                              id(current_pin) = "";
-
-                        else:
-                          - if:
-                              condition:
-                                - lambda: |-
-                                    return (id(alarm_status).state == "disarmed");
-                                - display.is_displaying_page: alarm_night_activate_page
-                              then:
-                                - homeassistant.service:
-                                    service: alarm_control_panel.alarm_arm_night
-                                    data:
-                                      entity_id: alarm_control_panel.alarmo
-                                      code: !lambda return id(current_pin).c_str();
-                                - lambda: |-
-                                    id(current_pin) = "";
-        - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    page_id: alarm_page
-    id: arm_disarm_home
-    x_min: 215
-    x_max: 320
-    y_min: 5
-    y_max: 75
-    on_click:
-      min_length: 0ms
-      max_length: 500ms
-      then:
-        - display.page.show: alarm_home_activate_page
-        - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    page_id: alarm_page
-    id: arm_disarm_away
-    x_min: 215
-    x_max: 320
-    y_min: 80
-    y_max: 150
-    on_click:
-      min_length: 0ms
-      max_length: 500ms
-      then:
-        - display.page.show: alarm_away_activate_page
-        - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    page_id: alarm_page
-    id: arm_disarm_night
-    x_min: 215
-    x_max: 320
-    y_min: 155
-    y_max: 240
-    on_click:
-      min_length: 0ms
-      max_length: 500ms
-      then:
-        - display.page.show: alarm_night_activate_page
-        - component.update: s3_box_lcd
 ################## config end ############################
