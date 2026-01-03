@@ -2,6 +2,15 @@
 ## However the <name:> is how HA connects to the device eg. esp32-s3-box-3.local is the mDNS hostname for the device.
 ## Once added to HA changing the device name can lead to connection issues, between HA and the device.
 
+# Use dev branch for micro wake word
+external_components:
+  # use rtttl and dfplayer from ESPHome's dev branch in GitHub
+  - source:
+      type: git
+      url: https://github.com/dpw13/esphome
+      ref: dwagner-mww-2025.12.4
+    components: [ micro_wake_word ]
+
 substitutions:
   name: esp32-s3-box-3
   friendly_name: ESP32-S3-Box-3
@@ -164,6 +173,9 @@ esp32:
 psram:
   mode: octal
   speed: 80MHz
+  # This setting enables several performance improvements because the platform
+  # will guarantee that the PSRAM is present or else it won't boot.
+  ignore_not_found: false
 
 api:
   on_client_connected:
@@ -206,7 +218,6 @@ wifi:
     - lambda: |-
         id(wifi_connection) = false;
 
-captive_portal:
 time:
   - platform: homeassistant
     id: ha_time
@@ -319,16 +330,15 @@ script:
     then:
       - if:
           condition:
-            and:
-              - switch.is_off: mute_switch
-              - lambda: return id(global_is_assisting) == false;
-              - not:
-                - voice_assistant.is_running
-              # Don't try to start monitoring if we're already capturing audio.
-              # TODO: we're silently discarding the voice monitoring start event here. Would
-              # probably be better to log a warning.
-              - not:
-                - microphone.is_capturing
+            - switch.is_off: mute_switch
+            - lambda: return id(global_is_assisting) == false;
+            - not:
+              - voice_assistant.is_running
+            # Don't try to start monitoring if we're already capturing audio.
+            # TODO: we're silently discarding the voice monitoring start event here. Would
+            # probably be better to log a warning.
+            - not:
+              - microphone.is_capturing
           then:
             - if:
                 condition:
@@ -345,6 +355,47 @@ script:
                   - delay: 200ms
                   - logger.log: "start_voice_assistant: mww.start"
                   - micro_wake_word.start:
+          else:
+            - logger.log: "start_voice_assistant not started"
+            - if:
+                condition:
+                  switch.is_on: mute_switch
+                then:
+                  logger.log: "mute_switch on"
+                else:
+                  logger.log: "mute_switch off"
+
+            - if:
+                condition:
+                  lambda: return id(global_is_assisting) != false;
+                then:
+                  logger.log: "global_is_assisting on"
+                else:
+                  logger.log: "global_is_assisting off"
+
+            - if:
+                condition:
+                  voice_assistant.is_running
+                then:
+                  logger.log: "voice_assistant running"
+                else:
+                  logger.log: "voice_assistant inactive"
+
+            - if:
+                condition:
+                  micro_wake_word.is_running
+                then:
+                  logger.log: "micro_wake_word running"
+                else:
+                  logger.log: "micro_wake_word inactive"
+
+            - if:
+                condition:
+                  microphone.is_capturing
+                then:
+                  logger.log: "microphone capturing"
+                else:
+                  logger.log: "microphone inactive"
 
   - id: stop_voice_assistant
     then:
@@ -1074,37 +1125,29 @@ speaker:
   - id: mixing_speaker
     platform: mixer
     output_speaker: i2s_audio_speaker
-    task_stack_in_psram: true
+    # Do not place task stack in psram as this is slightly lower performance
+    task_stack_in_psram: false
     source_speakers:
       - id: announcement_mixing_input
       - id: media_mixing_input
-  # Virtual speakers to resample each pipelines' audio, if necessary, as the mixer speaker requires the same sample rate
-  - platform: resampler
-    id: announcement_resampling_speaker
-    output_speaker: announcement_mixing_input
-    task_stack_in_psram: true
-    sample_rate: 48000  # Added explicit sample rate
-  - platform: resampler
-    id: media_resampling_speaker
-    output_speaker: media_mixing_input
-    task_stack_in_psram: true
-    sample_rate: 48000  # Added explicit sample rate
 
 media_player:
   - platform: speaker
     name: Media Player
     id: speaker_media_player
     volume_increment: 0.05
-    volume_min: 0.5
+    volume_initial: 0.4
+    volume_min: 0.2
     volume_max: 0.8
-    task_stack_in_psram: true
+    # Do not place task stack in psram as this is slightly lower performance
+    task_stack_in_psram: false
     announcement_pipeline:
-      speaker: announcement_resampling_speaker
+      speaker: announcement_mixing_input
       format: FLAC
       sample_rate: 48000
       num_channels: 1  # S3 Box only has one output channel
     media_pipeline:
-      speaker: media_resampling_speaker
+      speaker: media_mixing_input
       format: FLAC  # FLAC is the least processor intensive codec
       num_channels: 2
       sample_rate: 48000
@@ -1120,25 +1163,13 @@ media_player:
               media_player.is_playing:
             then:
               - script.execute: stop_voice_assistant
-        # The following results in start_voice_assistant being called every
-        # time there is a volume change. If the volume is changed when starting
-        # a voice command, we end up with mww and va running simultaneously.
         - if:
             condition:
-              or:
-                - media_player.is_idle
-                - media_player.is_paused
-            then:
-              - logger.log: "media_player state: start va"
-              - script.execute: start_voice_assistant
-        - if:
-            condition:
-              and:
-                - switch.is_off: timer_ringing
-                - not:
-                    voice_assistant.is_running:
-                - not:
-                    media_player.is_announcing:
+              - switch.is_off: timer_ringing
+              - not:
+                  voice_assistant.is_running:
+              - not:
+                  media_player.is_announcing:
             then:
               - mixer_speaker.apply_ducking:
                   id: media_mixing_input
@@ -1152,6 +1183,21 @@ media_player:
           id: media_mixing_input
           decibel_reduction: 20
           duration: 0.0s
+    on_idle:
+      - if:
+          condition:
+            # If not assisting but voice assistant is running, we're probably in
+            # VA shutdown. Wait for voice assistant to go idle then restart wake
+            # word.
+            - lambda: return id(global_is_assisting) == false;
+            - voice_assistant.is_running
+          then:
+            - logger.log: "media_player idle, va shutdown"
+            - wait_until:
+                - speaker.is_stopped:
+                    id: i2s_audio_speaker
+            - logger.log: "media_player idle, va restart"
+            - script.execute: start_voice_assistant
 
 micro_wake_word:
   id: mww
@@ -1164,9 +1210,8 @@ micro_wake_word:
     - delay: 50ms
     - if:
         condition:
-          and:
-            - switch.is_off: output_audio
-            - switch.is_on: wake_sound
+          - switch.is_off: output_audio
+          - switch.is_on: wake_sound
         then:
           - media_player.speaker.play_on_device_media_file:
               media_file: wake_sound_file
@@ -1178,9 +1223,8 @@ micro_wake_word:
         else:
           if:
             condition:
-              and:
-                - switch.is_on: output_audio
-                - switch.is_on: wake_sound
+              - switch.is_on: output_audio
+              - switch.is_on: wake_sound
             then:
               - homeassistant.service:
                   service: media_player.play_media
@@ -1209,9 +1253,8 @@ voice_assistant:
     - lambda: id(va).set_use_wake_word(false);
     - if:
         condition:
-          and:
-            - switch.is_off: output_audio
-            - switch.is_on: wake_sound
+          - switch.is_off: output_audio
+          - switch.is_on: wake_sound
         then:
           # - voice_assistant.stop:
           # - delay: 150ms
@@ -1233,9 +1276,8 @@ voice_assistant:
         else:
           if:
             condition:
-              and:
-                - switch.is_on: wake_sound
-                - switch.is_on: output_audio
+              - switch.is_on: wake_sound
+              - switch.is_on: output_audio
             then:
               - homeassistant.service:
                   service: media_player.play_media
@@ -1243,16 +1285,18 @@ voice_assistant:
                     entity_id: media_player.${external_media_player}
                     media_content_id: '${home_assistant_host}/local/sounds/awake.mp3'
                     media_content_type: music
-    - voice_assistant.start:
+    - voice_assistant.start
   on_start:
-    if:
-      condition:
-        - display.is_displaying_page: listening_page
-        - display.is_displaying_page: thinking_page
-      then:
-        - display.page.show: idle_page
-        - component.update: s3_box_lcd
+    - logger.log: "va on_start"
+    - if:
+        condition:
+          - display.is_displaying_page: listening_page
+          - display.is_displaying_page: thinking_page
+        then:
+          - display.page.show: idle_page
+          - component.update: s3_box_lcd
   on_listening:
+    - logger.log: "va on_listening"
     - text_sensor.template.publish:
         id: text_request
         state: "..."
@@ -1263,26 +1307,29 @@ voice_assistant:
     - display.page.show: listening_page
     - component.update: s3_box_lcd
   on_stt_end:
+    - logger.log: "va on_stt_end"
     - text_sensor.template.publish:
         id: text_request
         state: !lambda return x;
   on_stt_vad_end:
+    - logger.log: "va on_stt_vad_end"
     - display.page.show: thinking_page
     - component.update: s3_box_lcd
   on_tts_start:
+    - logger.log: "va on_tts_start"
     - text_sensor.template.publish:
         id: text_response
         state: !lambda return x;
   on_tts_end:
+    - logger.log: "va on_tts_end"
     - if:
         condition:
-          and:
-            # TODO: ducking would be a better option here I think. Apparently
-            # tts_end is for the end of computation and the beginning of
-            # announce?
-            - switch.is_on: mute_response_switch
-            - switch.is_off: media_mute
-            - switch.is_off: ext_media_mute
+          # TODO: ducking would be a better option here I think. Apparently
+          # tts_end is for the end of computation and the beginning of
+          # announce?
+          - switch.is_on: mute_response_switch
+          - switch.is_off: media_mute
+          - switch.is_off: ext_media_mute
         then:
           - switch.turn_on: media_mute
           - switch.turn_on: ext_media_mute
@@ -1302,8 +1349,14 @@ voice_assistant:
     - delay: 3s
     - display.page.show: idle_page
     - component.update: s3_box_lcd
+  # Only used when speaker is explicitly indicated
+  #on_tts_stream_start:
+  #  - logger.log: "va on_tts_stream_start"
+  #on_tts_stream_end:
+  #  - logger.log: "va on_tts_stream_end"
 
   on_error:
+    - logger.log: "va on_error"
     - if:
         condition:
           not:
@@ -1311,7 +1364,7 @@ voice_assistant:
         then:
           - display.page.show: error_page
           - component.update: s3_box_lcd
-          - delay: 4s
+          - delay: 2s
           - if:
               condition:
                 - display.is_displaying_page: error_page
@@ -1321,7 +1374,7 @@ voice_assistant:
     - lambda: id(global_is_assisting) = false;
 
   on_idle:
-    - lambda: id(global_is_assisting) = false;
+    # Currently not being called, possibly due to a bug in voice_assistant
     # Restart wake word detection
     - logger.log: "va idle: restart va"
     - script.execute: start_voice_assistant
@@ -1329,16 +1382,17 @@ voice_assistant:
     - component.update: s3_box_lcd
 
   on_end:
+    - logger.log: "va on_end"
+    - lambda: id(global_is_assisting) = false;
     - mixer_speaker.apply_ducking:
         id: media_mixing_input
         decibel_reduction: 0
         duration: 0.0s
     - if:
         condition:
-          and:
-            - switch.is_on: mute_response_switch
-            - switch.is_on: media_mute
-            - switch.is_on: ext_media_mute
+          - switch.is_on: mute_response_switch
+          - switch.is_on: media_mute
+          - switch.is_on: ext_media_mute
         then:
           - switch.turn_off: media_mute
           - switch.turn_off: ext_media_mute
@@ -2189,7 +2243,7 @@ i2c:
   - id: bus_a
     sda: GPIO08
     scl: GPIO18
-    scan: true
+    scan: false
     sda_pullup_enabled: true
     scl_pullup_enabled: true
     frequency: 100kHz
@@ -2197,7 +2251,7 @@ i2c:
   - id: bus_b
     sda: GPIO41
     scl: GPIO40
-    scan: true
+    scan: false
     sda_pullup_enabled: true
     scl_pullup_enabled: true
     frequency: 50kHz
@@ -3670,10 +3724,9 @@ binary_sensor:
             else:
               - if:
                   condition:
-                    and:
-                      - lambda: |-
-                          return (id(alarm_status).state == "disarmed");
-                      - display.is_displaying_page: alarm_home_activate_page
+                    - lambda: |-
+                        return (id(alarm_status).state == "disarmed");
+                    - display.is_displaying_page: alarm_home_activate_page
                   then:
                     - homeassistant.service:
                         service: alarm_control_panel.alarm_arm_home
@@ -3685,11 +3738,10 @@ binary_sensor:
                   else:
                     - if:
                         condition:
-                          and:
-                            - lambda: |-
-                                return (id(alarm_status).state == "disarmed");
+                          - lambda: |-
+                              return (id(alarm_status).state == "disarmed");
 
-                            - display.is_displaying_page: alarm_away_activate_page
+                          - display.is_displaying_page: alarm_away_activate_page
                         then:
                           - homeassistant.service:
                               service: alarm_control_panel.alarm_arm_away
@@ -3702,10 +3754,9 @@ binary_sensor:
                         else:
                           - if:
                               condition:
-                                and:
-                                  - lambda: |-
-                                      return (id(alarm_status).state == "disarmed");
-                                  - display.is_displaying_page: alarm_night_activate_page
+                                - lambda: |-
+                                    return (id(alarm_status).state == "disarmed");
+                                - display.is_displaying_page: alarm_night_activate_page
                               then:
                                 - homeassistant.service:
                                     service: alarm_control_panel.alarm_arm_night
